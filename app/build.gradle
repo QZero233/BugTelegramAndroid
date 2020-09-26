@@ -16,7 +16,17 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            resValue "string", "server_base_url", "${DEFAULT_REMOTE_URL}"
         }
+
+        debug{
+            resValue "string", "server_base_url", "${DEFAULT_LOCAL_URL}"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
