@@ -90,6 +90,10 @@ public class CommonPackedObject implements PackedObject {
     }
 
     public static String getDefaultName(Class cls){
+        ParameterObject parameterObjectAnnotation= (ParameterObject) cls.getDeclaredAnnotation(ParameterObject.class);
+        if(parameterObjectAnnotation!=null && !parameterObjectAnnotation.name().equals(""))
+            return parameterObjectAnnotation.name();
+
         return cls.getSimpleName();
     }
 

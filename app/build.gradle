@@ -18,16 +18,27 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             resValue "string", "server_base_url", "${DEFAULT_REMOTE_URL}"
+            resValue "string", "server_ip","${DEFAULT_REMOTE_IP}"
         }
 
         debug{
             resValue "string", "server_base_url", "${DEFAULT_LOCAL_URL}"
+            resValue "string", "server_ip","${DEFAULT_LOCAL_IP}"
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'org.greenrobot.greendao' // apply plugin
+
+greendao{
+    schemaVersion 1
+    daoPackage "com.qzero.telegram.dao.gen"
+    targetGenDir 'src/main/java'
 }
 
 dependencies {
@@ -55,5 +66,7 @@ dependencies {
 
     implementation 'com.jakewharton:butterknife:10.2.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+
+    implementation 'org.greenrobot:greendao:3.3.0' // add library
 
 }

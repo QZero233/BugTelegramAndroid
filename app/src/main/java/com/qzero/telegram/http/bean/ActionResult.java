@@ -1,5 +1,8 @@
 package com.qzero.telegram.http.bean;
 
+import com.qzero.telegram.http.exchange.ParameterObject;
+
+@ParameterObject(name = "actionResult")
 public class ActionResult {
 
     private boolean succeeded;

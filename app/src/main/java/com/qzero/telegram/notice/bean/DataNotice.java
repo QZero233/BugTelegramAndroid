@@ -1,4 +1,4 @@
-package com.qzero.telegram.dao.bean;
+package com.qzero.telegram.notice.bean;
 
 
 public class DataNotice {

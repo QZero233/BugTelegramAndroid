@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public interface LocalDataStorage {
 
-    final String NAME_LOCAL_TOKEN="localToken";
+    String NAME_LOCAL_TOKEN="localToken";
 
     <T> void storeObject(String name,T obj) throws IOException;
 

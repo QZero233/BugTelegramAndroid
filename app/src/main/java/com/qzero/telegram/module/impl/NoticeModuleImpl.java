@@ -2,13 +2,13 @@ package com.qzero.telegram.module.impl;
 
 import android.content.Context;
 
-import com.qzero.telegram.dao.bean.DataNotice;
-import com.qzero.telegram.module.bean.NoticeConnectInfo;
+import com.qzero.telegram.notice.bean.DataNotice;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.http.service.DefaultTransformer;
 import com.qzero.telegram.http.service.NoticeService;
 import com.qzero.telegram.module.NoticeModule;
+import com.qzero.telegram.module.bean.NoticeConnectInfo;
 
 import java.util.List;
 

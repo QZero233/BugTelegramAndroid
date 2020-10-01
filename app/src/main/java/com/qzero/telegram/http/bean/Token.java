@@ -1,6 +1,9 @@
 package com.qzero.telegram.http.bean;
 
 
+import com.qzero.telegram.http.exchange.ParameterObject;
+
+@ParameterObject(name = "token")
 public class Token {
 
     public static final int APP_ID_GUARD=1;

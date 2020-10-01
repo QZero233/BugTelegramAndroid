@@ -1,5 +1,8 @@
 package com.qzero.telegram.module.bean;
 
+import com.qzero.telegram.http.exchange.ParameterObject;
+
+@ParameterObject(name = "NoticeConnectInfo")
 public class NoticeConnectInfo {
 
     private int port;

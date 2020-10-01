@@ -1,6 +1,6 @@
 package com.qzero.telegram.module;
 
-import com.qzero.telegram.dao.bean.DataNotice;
+import com.qzero.telegram.notice.bean.DataNotice;
 import com.qzero.telegram.module.bean.NoticeConnectInfo;
 import com.qzero.telegram.http.bean.ActionResult;
 

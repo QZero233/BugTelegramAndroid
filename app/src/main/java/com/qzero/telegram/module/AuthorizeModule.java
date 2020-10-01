@@ -10,8 +10,8 @@ import io.reactivex.rxjava3.core.Observable;
 
 public interface AuthorizeModule {
 
-    Observable<ActionResult> login(LoginForm loginForm, Token tokenPreset);
+    Observable<ActionResult> login(LoginForm loginForm);
 
-    Observable<ActionResult> logout() throws IOException;
+    Observable<ActionResult> logout();
 
 }
