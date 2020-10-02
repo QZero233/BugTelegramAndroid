@@ -13,7 +13,6 @@ import android.widget.ProgressBar;
 import com.jakewharton.rxbinding4.view.RxView;
 import com.jakewharton.rxbinding4.widget.RxTextView;
 import com.qzero.telegram.R;
-import com.qzero.telegram.UserCenterActivity;
 import com.qzero.telegram.contract.LoginContract;
 import com.qzero.telegram.presenter.LoginPresenter;
 import com.qzero.telegram.view.BaseActivity;

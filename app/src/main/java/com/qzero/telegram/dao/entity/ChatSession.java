@@ -11,8 +11,8 @@ import java.util.List;
 import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
-@ParameterObject(name = "session")
-public class Session {
+@ParameterObject(name = "chat_session")
+public class ChatSession {
 
     @Id
     @Property(nameInDb = "sessionId")
@@ -25,16 +25,16 @@ public class Session {
     @Convert(columnType = String.class,converter = ChatMemberConverter.class)
     private List<ChatMember> chatMembers;
 
-    @Generated(hash = 1629034383)
-    public Session(String sessionId, String sessionName,
+    @Generated(hash = 250435511)
+    public ChatSession(String sessionId, String sessionName,
             List<ChatMember> chatMembers) {
         this.sessionId = sessionId;
         this.sessionName = sessionName;
         this.chatMembers = chatMembers;
     }
 
-    @Generated(hash = 1317889643)
-    public Session() {
+    @Generated(hash = 1350292942)
+    public ChatSession() {
     }
 
     public String getSessionId() {

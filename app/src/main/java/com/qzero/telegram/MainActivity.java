@@ -10,6 +10,7 @@ import com.qzero.telegram.dao.LocalDataStorage;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.bean.Token;
 import com.qzero.telegram.view.activity.LoginActivity;
+import com.qzero.telegram.view.activity.UserCenterActivity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +31,11 @@ public class MainActivity extends AppCompatActivity {
             if(token==null){
                 log.info("No token yet,jump to login");
                 startActivity(new Intent(this, LoginActivity.class));
+                finish();
             }else{
                 log.info("Already had a token,jump to userCenter");
-                startActivity(new Intent(this,UserCenterActivity.class));
+                startActivity(new Intent(this, UserCenterActivity.class));
+                finish();
             }
         } catch (IOException e) {
             log.error("Failed to check token status",e);

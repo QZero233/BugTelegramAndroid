@@ -47,6 +47,7 @@ public class NoticeProcessorManager {
 
     private void loadProcessors(){
         addProcessor(new MessageNoticeProcession());
+        addProcessor(new SessionNoticeProcessor(context));
     }
 
     private void addProcessor(NoticeProcessor processor){
