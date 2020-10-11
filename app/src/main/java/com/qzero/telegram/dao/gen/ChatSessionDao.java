@@ -30,6 +30,7 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         public final static Property SessionId = new Property(0, String.class, "sessionId", true, "sessionId");
         public final static Property SessionName = new Property(1, String.class, "sessionName", false, "sessionName");
         public final static Property ChatMembers = new Property(2, String.class, "chatMembers", false, "chatMembers");
+        public final static Property Deleted = new Property(3, boolean.class, "deleted", false, "deleted");
     }
 
     private final ChatMemberConverter chatMembersConverter = new ChatMemberConverter();
@@ -48,7 +49,8 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         db.execSQL("CREATE TABLE " + constraint + "\"CHAT_SESSION\" (" + //
                 "\"sessionId\" TEXT PRIMARY KEY NOT NULL ," + // 0: sessionId
                 "\"sessionName\" TEXT," + // 1: sessionName
-                "\"chatMembers\" TEXT);"); // 2: chatMembers
+                "\"chatMembers\" TEXT," + // 2: chatMembers
+                "\"deleted\" INTEGER NOT NULL );"); // 3: deleted
     }
 
     /** Drops the underlying database table. */
@@ -75,6 +77,7 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         if (chatMembers != null) {
             stmt.bindString(3, chatMembersConverter.convertToDatabaseValue(chatMembers));
         }
+        stmt.bindLong(4, entity.getDeleted() ? 1L: 0L);
     }
 
     @Override
@@ -95,6 +98,7 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         if (chatMembers != null) {
             stmt.bindString(3, chatMembersConverter.convertToDatabaseValue(chatMembers));
         }
+        stmt.bindLong(4, entity.getDeleted() ? 1L: 0L);
     }
 
     @Override
@@ -107,7 +111,8 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         ChatSession entity = new ChatSession( //
             cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0), // sessionId
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // sessionName
-            cursor.isNull(offset + 2) ? null : chatMembersConverter.convertToEntityProperty(cursor.getString(offset + 2)) // chatMembers
+            cursor.isNull(offset + 2) ? null : chatMembersConverter.convertToEntityProperty(cursor.getString(offset + 2)), // chatMembers
+            cursor.getShort(offset + 3) != 0 // deleted
         );
         return entity;
     }
@@ -117,6 +122,7 @@ public class ChatSessionDao extends AbstractDao<ChatSession, String> {
         entity.setSessionId(cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0));
         entity.setSessionName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setChatMembers(cursor.isNull(offset + 2) ? null : chatMembersConverter.convertToEntityProperty(cursor.getString(offset + 2)));
+        entity.setDeleted(cursor.getShort(offset + 3) != 0);
      }
     
     @Override

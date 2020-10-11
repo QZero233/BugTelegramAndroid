@@ -88,7 +88,16 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
-    public void deleteSession(String sessionId) {
+    public void deleteSessionLogically(String sessionId) {
+        ChatSession session=sessionDao.load(sessionId);
+        if(session!=null){
+            session.setDeleted(true);
+            sessionDao.update(session);
+        }
+    }
+
+    @Override
+    public void deleteSessionPhysically(String sessionId) {
         sessionDao.deleteByKey(sessionId);
     }
 }

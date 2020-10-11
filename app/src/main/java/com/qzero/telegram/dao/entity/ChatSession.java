@@ -25,12 +25,16 @@ public class ChatSession {
     @Convert(columnType = String.class,converter = ChatMemberConverter.class)
     private List<ChatMember> chatMembers;
 
-    @Generated(hash = 250435511)
+    @Property(nameInDb = "deleted")
+    private boolean deleted=false;
+
+    @Generated(hash = 1599966760)
     public ChatSession(String sessionId, String sessionName,
-            List<ChatMember> chatMembers) {
+            List<ChatMember> chatMembers, boolean deleted) {
         this.sessionId = sessionId;
         this.sessionName = sessionName;
         this.chatMembers = chatMembers;
+        this.deleted = deleted;
     }
 
     @Generated(hash = 1350292942)
@@ -61,4 +65,15 @@ public class ChatSession {
         this.chatMembers = chatMembers;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public boolean getDeleted() {
+        return this.deleted;
+    }
 }

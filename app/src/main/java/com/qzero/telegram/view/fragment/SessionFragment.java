@@ -1,6 +1,7 @@
 package com.qzero.telegram.view.fragment;
 
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,8 +80,13 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
                 ChatSession session=sessionList.get(position);
                 TextView tv_name=new TextView(getContext());
                 tv_name.setText(session.getSessionName());
-                tv_name.setTextSize(25);
+                tv_name.setTextSize(20);
                 tv_name.setTextColor(Color.BLUE);
+
+                if(session.isDeleted()){
+                    tv_name.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
+                    tv_name.setTextColor(Color.GRAY);
+                }
 
                 return tv_name;
             }

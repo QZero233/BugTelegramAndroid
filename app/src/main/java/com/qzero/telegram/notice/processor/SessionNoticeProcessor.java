@@ -50,8 +50,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
 
         if(detail!=null && detail.equals("deleted")){
             //SESSION deleted,use logical delete
-            //TODO LOGICAL DELETE
-            sessionModule.deleteSession(dataId);
+            sessionModule.deleteSessionLogically(dataId);
             broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,dataId, BroadcastModule.ActionType.ACTION_TYPE_DELETE);
         }else{
             sessionModule.getSession(dataId)
