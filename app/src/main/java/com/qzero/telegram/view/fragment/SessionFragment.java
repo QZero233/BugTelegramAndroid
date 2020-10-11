@@ -20,9 +20,6 @@ import com.qzero.telegram.view.BaseFragment;
 
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class SessionFragment extends BaseFragment implements SessionContract.View {
 
     public ListView lv_sessions;
@@ -47,11 +44,13 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
         presenter.onCreate();
 
         presenter.getSessionList();
+        presenter.registerSessionBroadcastReceiver();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        presenter.unregisterSessionBroadcastReceiver();
         presenter.detachView();
     }
 

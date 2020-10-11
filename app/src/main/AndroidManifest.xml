@@ -13,7 +13,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".view.activity.UserCenterActivity"></activity>
+        <activity android:name=".view.activity.FullUpdateActivity"></activity>
+        <activity android:name=".view.activity.UserCenterActivity" />
         <activity android:name=".view.activity.LoginActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

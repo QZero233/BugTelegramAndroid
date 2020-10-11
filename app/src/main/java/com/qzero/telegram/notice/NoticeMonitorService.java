@@ -44,7 +44,7 @@ public class NoticeMonitorService extends Service {
         if(occupied)
             return;//Another connection request is running
 
-        if(thread!=null && thread.isAlive())
+        if(thread!=null && thread.isConnectionAlive())
             return;//Already started
 
         module.requestConnection()
@@ -56,6 +56,7 @@ public class NoticeMonitorService extends Service {
 
                     @Override
                     public void onNext(@NonNull NoticeConnectInfo connectInfo) {
+                        log.debug("Got monitor connection info "+connectInfo);
                         thread=new NoticeMonitorThread(NoticeMonitorService.this,connectInfo);
                         thread.start();
                         occupied=false;
@@ -65,6 +66,13 @@ public class NoticeMonitorService extends Service {
                     public void onError(@NonNull Throwable e) {
                         occupied=false;
                         log.error("Failed to request notice monitor connection",e);
+                        log.debug("Trying after 5 sec");
+                        try {
+                            Thread.sleep(5*1000);
+                        }catch (Exception e1){
+                        }
+
+                        startMonitorThread();
                     }
 
                     @Override

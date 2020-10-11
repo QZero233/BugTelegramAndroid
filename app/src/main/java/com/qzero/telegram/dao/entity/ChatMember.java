@@ -1,5 +1,8 @@
 package com.qzero.telegram.dao.entity;
 
+import com.qzero.telegram.http.exchange.ParameterObject;
+
+@ParameterObject(name = "ChatMember")
 public class ChatMember {
 
     private int chatMemberId;

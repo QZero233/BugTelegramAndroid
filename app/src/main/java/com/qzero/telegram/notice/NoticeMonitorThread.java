@@ -33,6 +33,10 @@ public class NoticeMonitorThread extends Thread {
         processorManager=new NoticeProcessorManager(service);
     }
 
+    public boolean isConnectionAlive(){
+        return isAlive;
+    }
+
     @Override
     public void run() {
         super.run();
@@ -40,6 +44,9 @@ public class NoticeMonitorThread extends Thread {
         try {
             socket=new Socket(ip,port);
             InputStream inputStream=socket.getInputStream();
+
+            log.debug("Monitor connection is running......");
+
             while (true){
                 byte b= (byte) inputStream.read();
                 if(b==REMIND_CONSTANT){
@@ -55,6 +62,7 @@ public class NoticeMonitorThread extends Thread {
             log.error("Error when monitoring notice update",e);
         }
 
+        isAlive=false;
         log.info("Quit notice monitor thread");
         log.info("Trying to restart thread");
         service.startMonitorThread();

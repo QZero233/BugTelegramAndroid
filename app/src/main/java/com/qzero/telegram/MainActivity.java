@@ -9,6 +9,9 @@ import android.widget.Toast;
 import com.qzero.telegram.dao.LocalDataStorage;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.bean.Token;
+import com.qzero.telegram.module.FullUpdateModule;
+import com.qzero.telegram.module.impl.FullUpdateModuleImpl;
+import com.qzero.telegram.view.activity.FullUpdateActivity;
 import com.qzero.telegram.view.activity.LoginActivity;
 import com.qzero.telegram.view.activity.UserCenterActivity;
 
@@ -27,15 +30,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         try {
-            Token token=new LocalDataStorageImpl(this).getObject(LocalDataStorage.NAME_LOCAL_TOKEN,Token.class);
+            LocalDataStorage localDataStorage=new LocalDataStorageImpl(this);
+            Token token=localDataStorage.getObject(LocalDataStorage.NAME_LOCAL_TOKEN,Token.class);
             if(token==null){
                 log.info("No token yet,jump to login");
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
             }else{
-                log.info("Already had a token,jump to userCenter");
-                startActivity(new Intent(this, UserCenterActivity.class));
-                finish();
+
+                log.info("Already have had a token");
+
+                FullUpdateModule fullUpdateModule=new FullUpdateModuleImpl(this);
+                if(fullUpdateModule.checkIfNeedFullUpdate()){
+                    log.info("Need full update,jump to fullUpdate");
+                    startActivity(new Intent(this, FullUpdateActivity.class));
+                    finish();
+                }else{
+                    log.info("Don't need a full update,jump to userCenter");
+                    startActivity(new Intent(this, UserCenterActivity.class));
+                    finish();
+                }
             }
         } catch (IOException e) {
             log.error("Failed to check token status",e);

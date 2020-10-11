@@ -2,41 +2,29 @@ package com.qzero.telegram.module.bean;
 
 public class FullUpdateStatus {
 
-    public static final int NEED_UPDATE_VERSION=1;
+    public static final int FULL_UPDATE_NEEDED_VERSION_CODE=1;
 
-    private int lastUpdatedVersion;
-    private boolean updated;
-
+    private int lastFullUpdateVersionCode;
 
     public FullUpdateStatus() {
     }
 
-    public FullUpdateStatus(int lastUpdatedVersion, boolean updated) {
-        this.lastUpdatedVersion = lastUpdatedVersion;
-        this.updated = updated;
+    public FullUpdateStatus(int lastFullUpdateVersionCode) {
+        this.lastFullUpdateVersionCode = lastFullUpdateVersionCode;
     }
 
-    public int getLastUpdatedVersion() {
-        return lastUpdatedVersion;
+    public int getLastFullUpdateVersionCode() {
+        return lastFullUpdateVersionCode;
     }
 
-    public void setLastUpdatedVersion(int lastUpdatedVersion) {
-        this.lastUpdatedVersion = lastUpdatedVersion;
-    }
-
-    public boolean isUpdated() {
-        return updated;
-    }
-
-    public void setUpdated(boolean updated) {
-        this.updated = updated;
+    public void setLastFullUpdateVersionCode(int lastFullUpdateVersionCode) {
+        this.lastFullUpdateVersionCode = lastFullUpdateVersionCode;
     }
 
     @Override
     public String toString() {
         return "FullUpdateStatus{" +
-                "lastUpdatedVersion=" + lastUpdatedVersion +
-                ", updated=" + updated +
+                "lastFullUpdateVersionCode=" + lastFullUpdateVersionCode +
                 '}';
     }
 }

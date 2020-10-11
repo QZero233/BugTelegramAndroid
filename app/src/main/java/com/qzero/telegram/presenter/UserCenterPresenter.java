@@ -50,7 +50,7 @@ public class UserCenterPresenter extends BasePresenter<UserCenterContract.View> 
 
     @Override
     public void checkFullUpdateStatus() {
-        LocalDataStorage localDataStorage=new LocalDataStorageImpl(context);
+        /*LocalDataStorage localDataStorage=new LocalDataStorageImpl(context);
         FullUpdateStatus fullUpdateStatus=null;
         try {
             fullUpdateStatus=localDataStorage.getObject(LocalDataStorage.NAME_FULL_UPDATE_STATUS,FullUpdateStatus.class);
@@ -111,7 +111,7 @@ public class UserCenterPresenter extends BasePresenter<UserCenterContract.View> 
                             getView().hideProgress();
                         }
                     }
-                });
+                })*/
 
     }
 }

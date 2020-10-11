@@ -10,6 +10,8 @@ public class SessionContract {
 
     public interface Presenter extends IBasePresenter<View> {
         void getSessionList();
+        void registerSessionBroadcastReceiver();
+        void unregisterSessionBroadcastReceiver();
     }
 
     public interface View extends IBaseView {

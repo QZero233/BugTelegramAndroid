@@ -20,4 +20,6 @@ public interface SessionModule {
 
     Observable<ActionResult> removeChatMember(String sessionId,String memberUserName);
 
+    void deleteSession(String sessionId);
+
 }

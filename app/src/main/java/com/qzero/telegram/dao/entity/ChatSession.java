@@ -11,7 +11,7 @@ import java.util.List;
 import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
-@ParameterObject(name = "chat_session")
+@ParameterObject(name = "ChatSession")
 public class ChatSession {
 
     @Id

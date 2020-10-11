@@ -86,4 +86,9 @@ public class SessionModuleImpl implements SessionModule {
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
     }
+
+    @Override
+    public void deleteSession(String sessionId) {
+        sessionDao.deleteByKey(sessionId);
+    }
 }
