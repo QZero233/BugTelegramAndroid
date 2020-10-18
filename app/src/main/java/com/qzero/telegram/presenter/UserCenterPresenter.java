@@ -1,24 +1,14 @@
 package com.qzero.telegram.presenter;
 
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-
 import androidx.annotation.NonNull;
 
 import com.qzero.telegram.contract.UserCenterContract;
-import com.qzero.telegram.dao.LocalDataStorage;
-import com.qzero.telegram.dao.entity.ChatSession;
-import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
-import com.qzero.telegram.module.SessionModule;
-import com.qzero.telegram.module.bean.FullUpdateStatus;
-import com.qzero.telegram.module.impl.SessionModuleImpl;
+import com.qzero.telegram.dao.entity.UserInfo;
+import com.qzero.telegram.module.UserInfoModule;
+import com.qzero.telegram.module.impl.UserInfoModuleImpl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.List;
 
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -28,90 +18,46 @@ public class UserCenterPresenter extends BasePresenter<UserCenterContract.View> 
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    private Context context;
+    private UserInfoModule userInfoModule;
 
     @Override
     public void attachView(@NonNull UserCenterContract.View mView) {
         super.attachView(mView);
-
-        context=mView.getContext();
-    }
-
-    private int getVersionCode(){
-        PackageManager packageManager = context.getPackageManager();
-        try {
-            PackageInfo packageInfo=packageManager.getPackageInfo(context.getPackageName(),PackageManager.GET_CONFIGURATIONS);
-            return packageInfo.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            log.error("",e);
-            return -1;
-        }
+        userInfoModule=new UserInfoModuleImpl(mView.getContext());
     }
 
     @Override
-    public void checkFullUpdateStatus() {
-        /*LocalDataStorage localDataStorage=new LocalDataStorageImpl(context);
-        FullUpdateStatus fullUpdateStatus=null;
-        try {
-            fullUpdateStatus=localDataStorage.getObject(LocalDataStorage.NAME_FULL_UPDATE_STATUS,FullUpdateStatus.class);
-        }catch (IOException e){
-            log.error("Failed to get fullUpdateStatus",e);
-            getView().showToast("Failed to get update status,you can try to manual update by using settings");
-        }
-
-        if(fullUpdateStatus==null){
-            int currentVersionCode=getVersionCode();
-            fullUpdateStatus=new FullUpdateStatus(currentVersionCode,false);
-            try {
-                localDataStorage.storeObject(LocalDataStorage.NAME_FULL_UPDATE_STATUS,fullUpdateStatus);
-            } catch (IOException e) {
-                log.error("",e);
-            }
-        }
-
-        if(fullUpdateStatus.isUpdated())
-            return;
-
+    public void loadPersonalInfo() {
         getView().showProgress();
-        getView().showToast("Full updating....");
-
-        fullUpdateStatus.setUpdated(true);
-        try {
-            localDataStorage.storeObject(LocalDataStorage.NAME_FULL_UPDATE_STATUS,fullUpdateStatus);
-        } catch (IOException e) {
-            log.error("",e);
-        }
-
-        SessionModule sessionModule=new SessionModuleImpl(context);
-        sessionModule.getAllSessions()
-                .subscribe(new Observer<List<ChatSession>>() {
+        userInfoModule.getPersonalInfo()
+                .subscribe(new Observer<UserInfo>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull List<ChatSession> chatSessions) {
-
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull UserInfo userInfo) {
+                        if(isViewAttached()){
+                            getView().showPersonalInfo(userInfo);
+                        }
                     }
 
                     @Override
                     public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        log.error("Failed to execute session full update",e);
+                        log.error("Failed to get personal info",e);
                         if(isViewAttached()){
                             getView().hideProgress();
-                            getView().showToast("Failed to update session info");
+                            getView().showToast("Failed to get your info");
                         }
                     }
 
                     @Override
                     public void onComplete() {
-                        log.info("Session full update finished");
                         if(isViewAttached()){
                             getView().hideProgress();
                         }
                     }
-                })*/
-
+                });
     }
 }

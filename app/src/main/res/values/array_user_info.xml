@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="array_groups">
+        <item>Normal User</item>
+        <item>Admin</item>
+        <item>System Admin</item>
+    </array>
+
+    <array name="array_status">
+        <item>Offline</item>
+        <item>Online</item>
+        <item>Busy</item>
+        <item>Leaving</item>
+    </array>
+
+</resources>

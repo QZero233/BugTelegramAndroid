@@ -10,6 +10,8 @@ public interface LocalDataStorage {
 
     String NAME_FULL_UPDATE_STATUS="fullUpdateStatus";
 
+    String NAME_PERSONAL_INFO="personalInfo";
+
     <T> void storeObject(String name,T obj) throws IOException;
 
     <T> T getObject(String name,Class<T> cls) throws IOException;
