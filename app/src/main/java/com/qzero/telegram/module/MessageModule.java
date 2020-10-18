@@ -18,4 +18,8 @@ public interface MessageModule {
     Observable<ActionResult> updateMessageStatus(String messageId,String newStatus);
 
     Observable<List<ChatMessage>> getAllMessagesBySessionId(String sessionId);
+
+    void deleteMessageLocallyLogically(String messageId);
+
+    void deleteMessageLocallyPhysically(String messageId);
 }

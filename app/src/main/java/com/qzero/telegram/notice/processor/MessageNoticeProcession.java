@@ -25,7 +25,9 @@ public class MessageNoticeProcession implements NoticeProcessor {
 
         log.debug(String.format("Processing message update with id %s and detail %s", dataId,detail));
 
+
+
         //TODO PROCESS
-        return false;
+        return true;
     }
 }
