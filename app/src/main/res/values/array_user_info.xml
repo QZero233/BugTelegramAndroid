@@ -2,16 +2,16 @@
 <resources>
 
     <array name="array_groups">
-        <item>Normal User</item>
-        <item>Admin</item>
-        <item>System Admin</item>
+        <item>普通用户</item>
+        <item>管理员</item>
+        <item>系统管理员</item>
     </array>
 
     <array name="array_status">
-        <item>Offline</item>
-        <item>Online</item>
-        <item>Busy</item>
-        <item>Leaving</item>
+        <item>离线</item>
+        <item>在线</item>
+        <item>繁忙</item>
+        <item>离开</item>
     </array>
 
 </resources>

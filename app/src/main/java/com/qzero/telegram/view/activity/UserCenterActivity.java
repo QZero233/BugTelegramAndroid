@@ -44,6 +44,8 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
     @BindView(R.id.dl_user_center)
     public DrawerLayout dl_user_center;
 
+    private View header;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,13 +65,13 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
         getSupportFragmentManager().beginTransaction().replace(R.id.fl_content,sessionFragment).commit();
 
         lv_menu.setOnItemClickListener(this);
-        lv_menu.setAdapter(new ArrayAdapter<>(getContext(),R.layout.view_user_center_drawer_tv,new String[]{"Sessions","Settings"}));
+        lv_menu.setAdapter(new ArrayAdapter<>(getContext(),R.layout.view_user_center_drawer_tv,new String[]{"会话","设置"}));
     }
 
 
     @Override
     public void showPersonalInfo(UserInfo userInfo) {
-        View header=View.inflate(getContext(),R.layout.view_user_center_drawer_info,null);
+        header=View.inflate(getContext(),R.layout.view_user_center_drawer_info,null);
         TextView tv_user_name=header.findViewById(R.id.tv_user_name);
         TextView tv_group=header.findViewById(R.id.tv_group);
         TextView tv_motto=header.findViewById(R.id.tv_motto);
@@ -81,17 +83,17 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
         String[] groupLevelString=resources.getStringArray(R.array.array_groups);
 
         if(userInfo.getGroupLevel()<=groupLevelString.length-1)
-            tv_group.setText("Group: "+groupLevelString[userInfo.getGroupLevel()]);
+            tv_group.setText("用户组别: "+groupLevelString[userInfo.getGroupLevel()]);
         else
-            tv_group.setText("Unknown group");
+            tv_group.setText("未知组别");
 
-        tv_motto.setText("Motto: "+userInfo.getMotto());
+        tv_motto.setText("个性签名: "+userInfo.getMotto());
 
         String[] statusArray=resources.getStringArray(R.array.array_status);
         if(userInfo.getAccountStatus()<=statusArray.length-1)
-            tv_status.setText("Status "+statusArray[userInfo.getAccountStatus()]);
+            tv_status.setText("用户状态: "+statusArray[userInfo.getAccountStatus()]);
         else
-            tv_status.setText("Unknown status");
+            tv_status.setText("未知状态");
 
         lv_menu.addHeaderView(header);
     }
@@ -113,5 +115,14 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
         if(newFragment!=null)
             getSupportFragmentManager().beginTransaction().replace(R.id.fl_content,newFragment).commit();
         dl_user_center.closeDrawers();
+    }
+
+    public void gotoMainFragment(){
+        getSupportFragmentManager().beginTransaction().replace(R.id.fl_content,new SessionFragment()).commit();
+    }
+
+    public void reloadPersonalInfo(UserInfo userInfo){
+        lv_menu.removeHeaderView(header);
+        showPersonalInfo(userInfo);
     }
 }
