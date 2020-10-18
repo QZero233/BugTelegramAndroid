@@ -138,5 +138,18 @@ public class MessageModuleImpl implements MessageModule {
             }
         }
     }
+
+    @Override
+    public void deleteAllMessagesLocally() {
+        List<ChatMessage> messageList=messageDao.loadAll();
+        messageDao.deleteAll();
+        for(ChatMessage message:messageList){
+            try {
+                contentManager.deleteMessageContent(message.getMessageId());
+            } catch (IOException e) {
+                log.error("Failed to delete local message content with message id "+message.getMessageId(),e);
+            }
+        }
+    }
 }
 

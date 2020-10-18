@@ -22,4 +22,6 @@ public interface MessageModule {
     void deleteMessageLocallyLogically(String messageId);
 
     void deleteMessageLocallyPhysically(String messageId);
+
+    void deleteAllMessagesLocally();
 }

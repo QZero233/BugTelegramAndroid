@@ -8,6 +8,7 @@ import com.qzero.telegram.dao.LocalDataStorage;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.module.FullUpdateModule;
+import com.qzero.telegram.module.MessageModule;
 import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.bean.FullUpdateStatus;
 
@@ -32,10 +33,13 @@ public class FullUpdateModuleImpl implements FullUpdateModule {
 
     private SessionModule sessionModule;
 
+    private MessageModule messageModule;
+
     public FullUpdateModuleImpl(Context context) {
         this.context = context;
         localDataStorage=new LocalDataStorageImpl(context);
         sessionModule=new SessionModuleImpl(context);
+        messageModule=new MessageModuleImpl(context);
     }
 
     private int getCurrentVersionCode(){
@@ -90,14 +94,17 @@ public class FullUpdateModuleImpl implements FullUpdateModule {
     @Override
     public Observable<Boolean> executeFullUpdate() {
         //Temporarily we full update session and message
-        //TODO UPDATE MESSAGE
         return sessionModule.getAllSessions()
-                .flatMap(sessionsList -> {
-                    if(sessionsList!=null)
-                        //Means update successfully
-                        setUpdated();
-
-                    return Observable.just(sessionsList!=null);
+                .flatMap(sessions -> {
+                    //Message update will be done in ChatActivity
+                    //There do we just delete all messages
+                    messageModule.deleteAllMessagesLocally();
+                    return Observable.just(sessions!=null);
+                })
+                .flatMap(b -> {
+                    //Getting this place means update succeeded without error
+                    setUpdated();
+                    return Observable.just(b);
                 });
     }
 }
