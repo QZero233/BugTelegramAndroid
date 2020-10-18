@@ -101,16 +101,29 @@ public class MessageModuleImpl implements MessageModule {
 
     @Override
     public Observable<List<ChatMessage>> getAllMessagesBySessionId(String sessionId) {
-        return service.getAllMessagesBySessionId(sessionId)
-                .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> Observable.just((List<ChatMessage>)packedObject.parseCollectionObject("messageList",List.class,ChatMessage.class)))
-                .flatMap(messageList -> {
-                    for(ChatMessage message:messageList){
-                        messageDao.insertOrReplace(message);
-                        contentManager.saveMessageContent(message);
-                    }
-                    return Observable.just(messageList);
-                });
+        List<ChatMessage> messageListLocal=messageDao.queryBuilder().where(ChatMessageDao.Properties.SessionId.eq(sessionId)).list();
+        if(messageListLocal==null || messageListLocal.isEmpty()) {
+            return service.getAllMessagesBySessionId(sessionId)
+                    .compose(DefaultTransformer.getInstance(context))
+                    .flatMap(packedObject -> Observable.just((List<ChatMessage>) packedObject.parseCollectionObject("messageList", List.class, ChatMessage.class)))
+                    .flatMap(messageList -> {
+                        for (ChatMessage message : messageList) {
+                            messageDao.insertOrReplace(message);
+                            contentManager.saveMessageContent(message);
+                        }
+                        return Observable.just(messageList);
+                    });
+        }else{
+            for(ChatMessage message:messageListLocal){
+                try {
+                    message.setContent(contentManager.getMessageContent(message.getMessageId()));
+                } catch (IOException e) {
+                    log.error("Failed to get message content with message id "+message.getMessageId(),e);
+                }
+            }
+            return Observable.just(messageListLocal);
+        }
+
     }
 
     private void updateMessageStatusLocally(String messageId,String newStatus){

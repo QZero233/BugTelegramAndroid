@@ -1,11 +1,13 @@
 package com.qzero.telegram.view.fragment;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -18,20 +20,24 @@ import com.qzero.telegram.contract.SessionContract;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.presenter.SessionPresenter;
 import com.qzero.telegram.view.BaseFragment;
+import com.qzero.telegram.view.activity.ChatActivity;
 
 import java.util.List;
 
-public class SessionFragment extends BaseFragment implements SessionContract.View {
+public class SessionFragment extends BaseFragment implements SessionContract.View, AdapterView.OnItemClickListener {
 
     public ListView lv_sessions;
 
     private SessionContract.Presenter presenter;
+
+    private List<ChatSession> sessionList;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view=View.inflate(getContext(),R.layout.fragment_session,null);
         lv_sessions=view.findViewById(R.id.lv_sessions);
+        lv_sessions.setOnItemClickListener(this);
         presenter=new SessionPresenter();
 
         return view;
@@ -57,6 +63,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
 
     @Override
     public void showSessionList(List<ChatSession> sessionList) {
+        this.sessionList=sessionList;
         lv_sessions.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -91,5 +98,13 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
                 return tv_name;
             }
         });
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ChatSession session=sessionList.get(position);
+        Intent intent=new Intent(getContext(), ChatActivity.class);
+        intent.putExtra("sessionId",session.getSessionId());
+        startActivity(intent);
     }
 }
