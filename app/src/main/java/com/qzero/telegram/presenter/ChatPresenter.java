@@ -49,7 +49,8 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
     @Override
     public void loadMessageList(String sessionId) {
-        getView().showProgress();
+        if(isViewAttached())
+            getView().showProgress();
 
         messageModule.getAllMessagesBySessionId(sessionId)
                 .subscribe(new Observer<List<ChatMessage>>() {
@@ -154,6 +155,45 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
                     }
                 });
+    }
+
+    @Override
+    public void deleteMessage(String messageId, boolean isPhysical) {
+        if(isPhysical){
+            messageModule.deleteMessageLocallyPhysically(messageId);
+            loadMessageList(sessionId);
+        }else{
+            getView().showProgress();
+            messageModule.deleteMessage(messageId)
+                    .subscribe(new Observer<ActionResult>() {
+                        @Override
+                        public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                        }
+
+                        @Override
+                        public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                        }
+
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            log.error("Failed to delete remote message with id "+messageId,e);
+                            if(isViewAttached()){
+                                getView().hideProgress();
+                                getView().showToast("删除失败");
+                            }
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            if(isViewAttached()){
+                                getView().hideProgress();
+                                //loadMessageList(sessionId);
+                            }
+                        }
+                    });
+        }
     }
 
     @Override

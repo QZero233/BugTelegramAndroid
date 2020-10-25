@@ -10,9 +10,10 @@ public class ChatContract {
 
     public interface Presenter extends IBasePresenter<View>{
         void loadMessageList(String sessionId);
-
         void sendMessage(String senderName,byte[] content);
         void markRead(String messageId);
+
+        void deleteMessage(String messageId,boolean isPhysical);
 
         void registerMessageBroadcastListener();
         void unregisterMessageBroadcastListener();
