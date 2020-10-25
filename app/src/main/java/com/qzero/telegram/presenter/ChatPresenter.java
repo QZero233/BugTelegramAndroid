@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 import com.qzero.telegram.contract.ChatContract;
 import com.qzero.telegram.dao.entity.ChatMessage;
+import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.MessageModule;
 import com.qzero.telegram.module.impl.BroadcastModuleImpl;
@@ -30,6 +31,8 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
     private Context context;
 
     private String sessionId;
+
+    private List<ChatMessage> messageList;
 
     public ChatPresenter(String sessionId) {
         this.sessionId = sessionId;
@@ -57,6 +60,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull List<ChatMessage> messageList) {
+                        ChatPresenter.this.messageList=messageList;
                         if(isViewAttached()){
                             getView().showMessageList(messageList);
                         }
@@ -76,6 +80,78 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
                         if(isViewAttached()){
                             getView().hideProgress();
                         }
+                    }
+                });
+    }
+
+    @Override
+    public void sendMessage(String senderName,byte[] content) {
+        ChatMessage chatMessage=new ChatMessage();
+        chatMessage.setMessageStatus("sending");
+        chatMessage.setContent(content);
+        chatMessage.setSendTime(System.currentTimeMillis());
+        chatMessage.setSessionId(sessionId);
+        chatMessage.setSenderUserName(senderName);
+
+        if(messageList!=null){
+            messageList.add(chatMessage);
+            getView().showMessageList(messageList);
+        }
+
+        chatMessage.setMessageStatus("unread");
+
+        messageModule.saveMessage(chatMessage)
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to send message "+chatMessage,e);
+                        if(isViewAttached()){
+                            getView().showToast("发送失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if(isViewAttached()){
+                            messageList.get(messageList.size()-1).setMessageStatus("unread");
+                            getView().showMessageList(messageList);
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void markRead(String messageId) {
+        messageModule.updateMessageStatus(messageId,"read")
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to mark message as read with messageId "+messageId,e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
                     }
                 });
     }

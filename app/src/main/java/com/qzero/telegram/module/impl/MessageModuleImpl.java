@@ -64,6 +64,7 @@ public class MessageModuleImpl implements MessageModule {
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)))
                 .flatMap(actionResult -> {
                     if(actionResult.isSucceeded()){
+                        message.setMessageId(actionResult.getMessage());
                         messageDao.insertOrReplace(message);
                         contentManager.saveMessageContent(message);
                     }
@@ -101,7 +102,7 @@ public class MessageModuleImpl implements MessageModule {
 
     @Override
     public Observable<List<ChatMessage>> getAllMessagesBySessionId(String sessionId) {
-        List<ChatMessage> messageListLocal=messageDao.queryBuilder().where(ChatMessageDao.Properties.SessionId.eq(sessionId)).list();
+        List<ChatMessage> messageListLocal=messageDao.queryBuilder().orderAsc(ChatMessageDao.Properties.SendTime).where(ChatMessageDao.Properties.SessionId.eq(sessionId)).list();
         if(messageListLocal==null || messageListLocal.isEmpty()) {
             return service.getAllMessagesBySessionId(sessionId)
                     .compose(DefaultTransformer.getInstance(context))

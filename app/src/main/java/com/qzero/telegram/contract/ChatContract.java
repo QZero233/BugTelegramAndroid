@@ -11,6 +11,9 @@ public class ChatContract {
     public interface Presenter extends IBasePresenter<View>{
         void loadMessageList(String sessionId);
 
+        void sendMessage(String senderName,byte[] content);
+        void markRead(String messageId);
+
         void registerMessageBroadcastListener();
         void unregisterMessageBroadcastListener();
     }
