@@ -2,6 +2,7 @@ package com.qzero.telegram.view.activity;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
@@ -54,12 +55,14 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
     private List<ChatMessage> messageList;
 
+    private String sessionId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        String sessionId=getIntent().getStringExtra("sessionId");
+        sessionId=getIntent().getStringExtra("sessionId");
 
         ButterKnife.bind(this);
 
@@ -105,7 +108,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if(item.getItemId()==R.id.m_session){
-            
+            Intent intent=new Intent(getContext(),SessionDetailActivity.class);
+            intent.putExtra("sessionId",sessionId);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -206,6 +211,11 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
                 return v;
             }
         });
+    }
+
+    @Override
+    public void clearMessageInput() {
+        et_content.setText("");
     }
 
     private void showDeleteConfirmDialog(String messageId,boolean isPhysical) {

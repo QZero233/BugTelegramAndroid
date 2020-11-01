@@ -21,6 +21,7 @@ public class ChatContract {
 
     public interface View extends IBaseView{
         void showMessageList(List<ChatMessage> messageList);
+        void clearMessageInput();
     }
 
 }

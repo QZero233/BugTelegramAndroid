@@ -10,6 +10,10 @@ import io.reactivex.rxjava3.core.Observable;
 
 public interface SessionModule {
 
+    int LEVEL_NORMAL=0;
+    int LEVEL_OPERATOR=1;
+    int LEVEL_OWNER=2;
+
     Observable<List<ChatSession>> getAllSessions();
 
     Observable<ChatSession> getSession(String sessionId);

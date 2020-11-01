@@ -67,7 +67,9 @@ public class SessionModuleImpl implements SessionModule {
 
         return sessionService.createSession(parameter)
                 .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+                .flatMap(packedObject -> {
+                    return Observable.just(packedObject.parseObject(ActionResult.class));
+                });
     }
 
     @Override

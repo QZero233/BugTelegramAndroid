@@ -110,7 +110,8 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
-
+                        if(actionResult.isSucceeded() && isViewAttached())
+                            getView().clearMessageInput();
                     }
 
                     @Override
