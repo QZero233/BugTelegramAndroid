@@ -13,7 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".view.activity.ChatActivity"></activity>
+        <activity android:name=".view.activity.UserInfoDetailActivity"></activity>
+        <activity android:name=".view.activity.FriendListActivity" />
+        <activity android:name=".view.activity.SessionDetailActivity" />
+        <activity android:name=".view.activity.ChatActivity" />
         <activity android:name=".view.activity.FullUpdateActivity" />
         <activity android:name=".view.activity.UserCenterActivity" />
         <activity android:name=".view.activity.LoginActivity" />

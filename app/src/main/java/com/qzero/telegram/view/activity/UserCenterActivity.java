@@ -22,6 +22,7 @@ import com.qzero.telegram.dao.entity.UserInfo;
 import com.qzero.telegram.notice.NoticeMonitorService;
 import com.qzero.telegram.presenter.UserCenterPresenter;
 import com.qzero.telegram.view.BaseActivity;
+import com.qzero.telegram.view.fragment.FriendListFragment;
 import com.qzero.telegram.view.fragment.PersonalInfoFragment;
 import com.qzero.telegram.view.fragment.SessionFragment;
 
@@ -65,12 +66,14 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
         getSupportFragmentManager().beginTransaction().replace(R.id.fl_content,sessionFragment).commit();
 
         lv_menu.setOnItemClickListener(this);
-        lv_menu.setAdapter(new ArrayAdapter<>(getContext(),R.layout.view_user_center_drawer_tv,new String[]{"会话","设置"}));
+        lv_menu.setAdapter(new ArrayAdapter<>(getContext(),R.layout.view_user_center_drawer_tv,new String[]{"会话","好友列表","设置"}));
     }
 
 
     @Override
     public void showPersonalInfo(UserInfo userInfo) {
+        lv_menu.removeHeaderView(header);
+
         header=View.inflate(getContext(),R.layout.view_user_center_drawer_info,null);
         TextView tv_user_name=header.findViewById(R.id.tv_user_name);
         TextView tv_group=header.findViewById(R.id.tv_group);
@@ -95,6 +98,7 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
         else
             tv_status.setText("未知状态");
 
+
         lv_menu.addHeaderView(header);
     }
 
@@ -109,6 +113,9 @@ public class UserCenterActivity extends BaseActivity implements UserCenterContra
                 newFragment=new SessionFragment();
                 break;
             case 2:
+                newFragment=new FriendListFragment();
+                break;
+            case 3:
                 //TODO PUT SETTINGS
                 break;
         }

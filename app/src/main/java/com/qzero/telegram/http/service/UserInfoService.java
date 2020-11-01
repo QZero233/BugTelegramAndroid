@@ -6,13 +6,14 @@ import io.reactivex.rxjava3.core.Observable;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 public interface UserInfoService {
 
-    @GET("/account/user_info")
-    Observable<PackedObject> getPersonalInfo();
-
     @PUT("/account/user_info")
     Observable<PackedObject> updatePersonalInfo(@Body PackedObject parameter);
+
+    @GET("/account/user_info/{user_name}")
+    Observable<PackedObject> getOtherUserInfo(@Path("user_name")String userName);
 
 }

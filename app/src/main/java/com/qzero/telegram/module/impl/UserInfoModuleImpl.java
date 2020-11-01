@@ -3,7 +3,9 @@ package com.qzero.telegram.module.impl;
 import android.content.Context;
 
 import com.qzero.telegram.dao.LocalDataStorage;
+import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.UserInfo;
+import com.qzero.telegram.dao.gen.UserInfoDao;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
@@ -17,50 +19,84 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 import io.reactivex.rxjava3.core.Observable;
 
 public class UserInfoModuleImpl implements UserInfoModule {
 
-    private Logger log= LoggerFactory.getLogger(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private Context context;
 
     private UserInfoService service;
 
+    private UserInfoDao userInfoDao;
+
     public UserInfoModuleImpl(Context context) {
         this.context = context;
-        service= RetrofitHelper.getInstance(context).getService(UserInfoService.class);
-    }
-
-    @Override
-    public Observable<UserInfo> getPersonalInfo() {
-        LocalDataStorage localDataStorage=new LocalDataStorageImpl(context);
-
-        try {
-            UserInfo personalInfo=localDataStorage.getObject(LocalDataStorage.NAME_PERSONAL_INFO,UserInfo.class);
-            if(personalInfo!=null)
-                return Observable.just(personalInfo);
-        }catch (IOException e){
-            log.error("Failed to get local personal info",e);
-        }
-
-        return service.getPersonalInfo()
-                .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> {
-                    UserInfo personalInfo=packedObject.parseObject(UserInfo.class);
-                    localDataStorage.storeObject(LocalDataStorage.NAME_PERSONAL_INFO,personalInfo);
-                    return Observable.just(personalInfo);
-                });
+        service = RetrofitHelper.getInstance(context).getService(UserInfoService.class);
+        userInfoDao = SessionManager.getInstance(context).getSession().getUserInfoDao();
     }
 
     @Override
     public Observable<ActionResult> updatePersonalInfo(UserInfo newUserInfo) {
-        PackedObject parameter=new CommonPackedObjectFactory().getParameter(context);
+        PackedObject parameter = new CommonPackedObjectFactory().getParameter(context);
         parameter.addObject(newUserInfo);
 
         return service.updatePersonalInfo(parameter)
                 .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+                .flatMap(packedObject ->
+                {
+                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
+
+                    if(actionResult.isSucceeded()){
+                        userInfoDao.insertOrReplace(newUserInfo);
+                    }
+
+                    return Observable.just(actionResult);
+                });
+    }
+
+    @Override
+    public Observable<UserInfo> getUserInfo(String userName) {
+
+        UserInfo localUserInfo=userInfoDao.queryBuilder().where(UserInfoDao.Properties.UserName.eq(userName)).unique();
+
+        Observable<UserInfo> remote=service.getOtherUserInfo(userName)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject ->
+                {
+                    UserInfo userInfo=packedObject.parseObject(UserInfo.class);
+                    userInfoDao.insertOrReplace(userInfo);
+                    return Observable.just(userInfo);
+                });
+
+        if(localUserInfo==null)
+            return remote;
+        else
+            return Observable.concat(Observable.just(localUserInfo),remote);
+    }
+
+    @Override
+    public Observable<UserInfo> getUserInfoFromOnlyRemote(String userName) {
+        return service.getOtherUserInfo(userName)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject ->
+                {
+                    UserInfo userInfo=packedObject.parseObject(UserInfo.class);
+                    userInfoDao.insertOrReplace(userInfo);
+                    return Observable.just(userInfo);
+                });
+    }
+
+    @Override
+    public List<UserInfo> getLocalFriendList() {
+        return userInfoDao.loadAll();
+    }
+
+    @Override
+    public void deleteLocally(String userName) {
+        userInfoDao.deleteByKey(userName);
     }
 }
