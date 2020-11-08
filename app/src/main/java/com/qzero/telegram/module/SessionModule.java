@@ -24,6 +24,14 @@ public interface SessionModule {
 
     Observable<ActionResult> removeChatMember(String sessionId,String memberUserName);
 
+    Observable<ActionResult> quitSession(String sessionId);
+
+    Observable<ActionResult> deleteSession(String sessionId);
+
+    Observable<ActionResult> updateSession(ChatSession session);
+
+    Observable<ActionResult> updateChatMember(ChatMember chatMember);
+
     void deleteSessionPhysically(String sessionId);
 
     void deleteSessionLogically(String sessionId);

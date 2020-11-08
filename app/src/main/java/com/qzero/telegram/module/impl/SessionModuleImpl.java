@@ -5,6 +5,7 @@ import android.content.Context;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatMessageDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
@@ -14,6 +15,7 @@ import com.qzero.telegram.http.exchange.PackedObjectFactory;
 import com.qzero.telegram.http.service.DefaultTransformer;
 import com.qzero.telegram.http.service.SessionService;
 import com.qzero.telegram.module.SessionModule;
+import com.qzero.telegram.utils.LocalStorageUtils;
 
 import java.util.List;
 
@@ -90,6 +92,78 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
+    public Observable<ActionResult> quitSession(String sessionId) {
+        String myName= LocalStorageUtils.getLocalTokenUserName(context);
+        return removeChatMember(sessionId,myName)
+                .flatMap(actionResult -> {
+                    if(actionResult.isSucceeded()){
+                        deleteSessionLogically(sessionId);
+                    }
+
+                    return Observable.just(actionResult);
+                });
+    }
+
+    @Override
+    public Observable<ActionResult> deleteSession(String sessionId) {
+        return sessionService.deleteSession(sessionId)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> {
+                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
+
+                    if(actionResult.isSucceeded()){
+                        deleteSessionLogically(sessionId);
+                    }
+
+                    return Observable.just(actionResult);
+                });
+    }
+
+    @Override
+    public Observable<ActionResult> updateSession(ChatSession session) {
+        PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
+        PackedObject parameter=objectFactory.getParameter(context);
+        parameter.addObject(session);
+        return sessionService.updateSession(session.getSessionId(),parameter)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> {
+                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
+
+                    if(actionResult.isSucceeded()){
+                        sessionDao.insertOrReplace(session);
+                    }
+
+                    return Observable.just(actionResult);
+                });
+    }
+
+    @Override
+    public Observable<ActionResult> updateChatMember(ChatMember chatMember) {
+        PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
+        PackedObject parameter=objectFactory.getParameter(context);
+        parameter.addObject(chatMember);
+        return sessionService.updateChatMember(chatMember.getUserName(),chatMember.getSessionId(),parameter)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> {
+                   ActionResult  actionResult=packedObject.parseObject(ActionResult.class);
+
+                   if(actionResult.isSucceeded()){
+                       ChatSession session=sessionDao.load(chatMember.getSessionId());
+                       List<ChatMember> memberList=session.getChatMembers();
+                       for(int i=0;i<memberList.size();i++){
+                           if(memberList.get(i).getUserName().equals(chatMember.getUserName())){
+                               memberList.set(i,chatMember);
+                               break;
+                           }
+                       }
+                       sessionDao.insertOrReplace(session);
+                   }
+
+                   return Observable.just(actionResult);
+                });
+    }
+
+    @Override
     public void deleteSessionLogically(String sessionId) {
         ChatSession session=sessionDao.load(sessionId);
         if(session!=null){
@@ -101,5 +175,7 @@ public class SessionModuleImpl implements SessionModule {
     @Override
     public void deleteSessionPhysically(String sessionId) {
         sessionDao.deleteByKey(sessionId);
+        ChatMessageDao messageDao=SessionManager.getInstance(context).getSession().getChatMessageDao();
+        messageDao.queryBuilder().where(ChatMessageDao.Properties.SessionId.eq(sessionId)).buildDelete().executeDeleteWithoutDetachingEntities();
     }
 }

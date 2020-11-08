@@ -23,7 +23,10 @@ import com.jakewharton.rxbinding4.widget.RxAdapterView;
 import com.qzero.telegram.R;
 import com.qzero.telegram.contract.ChatContract;
 import com.qzero.telegram.dao.LocalDataStorage;
+import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMessage;
+import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.bean.Token;
 import com.qzero.telegram.presenter.ChatPresenter;
@@ -57,14 +60,24 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
     private String sessionId;
 
+    private boolean firstShowMessageList=true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        sessionId=getIntent().getStringExtra("sessionId");
-
         ButterKnife.bind(this);
+
+        sessionId=getIntent().getStringExtra("sessionId");
+        ChatSessionDao chatSessionDao= SessionManager.getInstance(getContext()).getSession().getChatSessionDao();
+        ChatSession session=chatSessionDao.load(sessionId);
+        if(session!=null && session.getDeleted()){
+            findViewById(R.id.ll_input).setVisibility(View.GONE);
+        }
+        if(session!=null){
+            setTitle(session.getSessionName());
+        }
 
         presenter=new ChatPresenter(sessionId);
         presenter.attachView(this);
@@ -118,6 +131,11 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
     @Override
     public void showMessageList(List<ChatMessage> messageList) {
+
+        int position = lv_messages.getFirstVisiblePosition();
+        View view = lv_messages.getChildAt(0);
+        int top = view==null ? 0:view.getTop();
+
         this.messageList=messageList;
         lv_messages.setAdapter(new BaseAdapter() {
             @Override
@@ -211,6 +229,13 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
                 return v;
             }
         });
+
+        if(!firstShowMessageList)
+            lv_messages.setSelectionFromTop(position , top );
+        else{
+            lv_messages.setSelection(lv_messages.getCount()-1);
+            firstShowMessageList=false;
+        }
     }
 
     @Override

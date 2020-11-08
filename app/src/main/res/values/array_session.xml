@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="array_session_member_level">
+        <item>普通用户</item>
+        <item>管理员</item>
+        <item>会话拥有者</item>
+    </array>
+
+</resources>

@@ -7,14 +7,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.jakewharton.rxbinding4.view.RxView;
 import com.jakewharton.rxbinding4.widget.RxAdapterView;
 import com.qzero.telegram.R;
@@ -39,6 +42,8 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     public TextView tv_session_name;
     @BindView(R.id.et_session_name)
     public TextInputEditText et_session_name;
+    @BindView(R.id.til_session_name)
+    public TextInputLayout til_session_name;
 
     @BindView(R.id.fb_add_member)
     public FloatingActionButton fb_add_member;
@@ -46,10 +51,13 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     public Button btn_delete;
     @BindView(R.id.btn_submit)
     public Button btn_submit;
+    @BindView(R.id.btn_quit)
+    public Button btn_quit;
 
     private SessionDetailContract.Presenter presenter;
 
     private boolean isOperator=false;
+    private boolean isDeleted=false;
 
     private ChatSession session;
 
@@ -75,32 +83,118 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
 
         RxAdapterView.itemLongClickEvents(lv_members)
                 .subscribe(event -> {
+                    if(isDeleted)
+                        return;
+
                     if(isOperator)
-                        showMemberOperatorDialog();
+                        showMemberOperatorDialog(event.getPosition(),session.getChatMembers().get(event.getPosition()));
                 });
 
         RxView.clicks(fb_add_member)
                 .subscribe(u -> {
                     showAddMemberDialog();
                 });
+
+        RxView.clicks(btn_quit)
+                .subscribe(u -> {
+                    quitSession();
+                });
+
+        RxView.clicks(btn_submit)
+                .subscribe(u-> {
+                    submitUpdates();
+                });
+
+        RxView.clicks(btn_delete)
+                .subscribe(u ->{
+                    deleteSession();
+                });
+    }
+
+    private void deleteSession(){
+        if(!isDeleted){
+            AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+            builder.setMessage("确认删除此会话？\n此操作不可逆")
+                    .setNegativeButton("取消",null)
+                    .setPositiveButton("删除",(a,b) -> {
+                        presenter.deleteSessionRemotely();
+                    })
+                    .setCancelable(false)
+                    .show();
+        }else{
+            AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+            builder.setMessage("确认永久删除此会话？\n这将顺带删除此会话的所有聊天记录且此操作不可逆！");
+            builder.setNegativeButton("取消",null);
+            builder.setPositiveButton("删除",(a,b) -> {
+                presenter.deleteSessionLocally();
+            });
+            builder.setCancelable(false).show();
+        }
+
+    }
+
+    private void submitUpdates(){
+        String sessionName=et_session_name.getText().toString();
+        session.setSessionName(sessionName);
+        presenter.submitUpdates(session);
+    }
+
+    private void quitSession(){
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        builder.setMessage("是否退出会话？")
+                .setNegativeButton("取消",null)
+                .setPositiveButton("确认",(a,b) -> {presenter.quitSession();})
+                .setCancelable(false)
+                .show();
     }
 
     private void showAddMemberDialog(){
-        //TODO SELECT FROM LOCAL FRIEND LIST
         AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
 
-        EditText et_user_name=new EditText(getContext());
-        builder.setView(et_user_name);
-        builder.setMessage("请输入对方的用户名");
-        builder.setPositiveButton("添加",(a,b)->{
-            presenter.addMember(et_user_name.getText().toString());
-        });
+        String[] friendNameArray=presenter.getFriendNames();
+        ListView listView=new ListView(getContext());
+        listView.setAdapter(new ArrayAdapter<>(getContext(),R.layout.view_personal_info_sp_tv,friendNameArray));
 
+        RxAdapterView.itemClickEvents(listView)
+                .subscribe(event-> {
+                    String name=friendNameArray[event.getPosition()];
+                    presenter.addMember(name);
+                });
+
+        builder.setView(listView);
+        builder.setMessage("请选择要添加的用户");
         builder.setNegativeButton("取消",null).setCancelable(false).show();
     }
 
-    private void showMemberOperatorDialog(){
+    private void showMemberOperatorDialog(int position,ChatMember member){
+        View v=View.inflate(getContext(),R.layout.view_manage_member,null);
 
+        TextView tv_user_name=v.findViewById(R.id.tv_user_name);
+        Spinner sp_level=v.findViewById(R.id.sp_level);
+        Button btn_submit=v.findViewById(R.id.btn_submit);
+        Button btn_remove=v.findViewById(R.id.btn_remove);
+
+        tv_user_name.setText(member.getUserName());
+        if(member.getLevel()<=getResources().getStringArray(R.array.array_session_member_level).length){
+            sp_level.setSelection(member.getLevel());
+        }
+
+        RxView.clicks(btn_submit)
+                .subscribe(u -> {
+                    member.setLevel(sp_level.getSelectedItemPosition());
+                    presenter.updateMember(member);
+                });
+        RxView.clicks(btn_remove)
+                .subscribe(u -> {
+                    presenter.deleteMember(member.getUserName());
+                });
+
+
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        builder.setView(v)
+                .setNegativeButton("取消",null)
+                .setCancelable(false)
+                .show();
     }
 
     @Override
@@ -111,7 +205,7 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
 
     @Override
     public void showNormalUserMode() {
-        et_session_name.setVisibility(View.GONE);
+        til_session_name.setVisibility(View.GONE);
         btn_delete.setVisibility(View.GONE);
         btn_submit.setVisibility(View.GONE);
         fb_add_member.setVisibility(View.GONE);
@@ -127,7 +221,18 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     @Override
     public void showOwnerMode() {
         tv_session_name.setVisibility(View.GONE);
+        btn_quit.setVisibility(View.GONE);
         isOperator=true;
+    }
+
+    @Override
+    public void showDeletedMode() {
+        til_session_name.setVisibility(View.GONE);
+        btn_delete.setVisibility(View.VISIBLE);
+        btn_submit.setVisibility(View.GONE);
+        btn_quit.setVisibility(View.GONE);
+        fb_add_member.setVisibility(View.GONE);
+        isDeleted=true;
     }
 
     @Override

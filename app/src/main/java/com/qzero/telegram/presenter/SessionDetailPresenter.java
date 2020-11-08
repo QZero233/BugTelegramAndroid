@@ -6,7 +6,9 @@ import com.qzero.telegram.contract.SessionDetailContract;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.UserInfo;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
+import com.qzero.telegram.dao.gen.UserInfoDao;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.impl.SessionModuleImpl;
@@ -15,6 +17,8 @@ import com.qzero.telegram.utils.LocalStorageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Observer;
@@ -29,16 +33,25 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
 
     private ChatSessionDao sessionDao;
 
+    private UserInfoDao userInfoDao;
+
     @Override
     public void attachView(@NonNull SessionDetailContract.View mView) {
         super.attachView(mView);
         sessionModule=new SessionModuleImpl(mView.getContext());
         sessionDao= SessionManager.getInstance(mView.getContext()).getSession().getChatSessionDao();
+        userInfoDao= SessionManager.getInstance(mView.getContext()).getSession().getUserInfoDao();
     }
 
     @Override
     public void initView(String sessionId) {
         chatSession=sessionDao.load(sessionId);
+
+        if(chatSession.getDeleted()){
+            getView().showDeletedMode();
+            getView().loadSessionInfo(chatSession);
+            return;
+        }
 
         //Set role
         String currentUserName= LocalStorageUtils.getLocalTokenUserName(getView().getContext());
@@ -98,6 +111,207 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
                     public void onComplete() {
                         if(isViewAttached()){
                             getView().hideProgress();
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void deleteMember(String memberUserName) {
+        getView().showProgress();
+        sessionModule.removeChatMember(chatSession.getSessionId(),memberUserName)
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error(String.format("Failed to remove chat member %s in session with id %s", memberUserName,chatSession.getSessionId()));
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("移除失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("移除成功");
+                            getView().exit();
+                        }
+                    }
+                });
+
+    }
+
+    @Override
+    public void updateMember(ChatMember chatMember) {
+        getView().showProgress();
+        sessionModule.updateChatMember(chatMember)
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error(String.format("Failed to update chat member %s in session with id %s", chatMember+"",chatSession.getSessionId()));
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("提交失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("提交成功");
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public String[] getFriendNames() {
+        List<UserInfo> userInfoList=userInfoDao.loadAll();
+        if(userInfoList==null)
+            return new String[0];
+
+        String myName=LocalStorageUtils.getLocalTokenUserName(getView().getContext());
+        List<String> nameList=new ArrayList<>();
+        for(UserInfo userInfo:userInfoList){
+            if(userInfo.getUserName().equals(myName))
+                continue;
+
+            nameList.add(userInfo.getUserName());
+        }
+
+        return nameList.toArray(new String[]{});
+    }
+
+    @Override
+    public void quitSession() {
+        getView().showProgress();
+        sessionModule.quitSession(chatSession.getSessionId())
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to quit session with id "+chatSession.getSessionId());
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("退出失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        log.debug("Quited session with id "+chatSession.getSessionId());
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("退出成功");
+                            getView().exit();
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void deleteSessionRemotely() {
+        getView().showProgress();
+        sessionModule.deleteSession(chatSession.getSessionId())
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to delete session with id "+chatSession.getSessionId());
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("删除失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        log.debug("Deleted session with id "+chatSession.getSessionId());
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("删除成功");
+                            getView().exit();
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void deleteSessionLocally() {
+        sessionModule.deleteSessionPhysically(chatSession.getSessionId());
+        getView().exit();
+    }
+
+    @Override
+    public void submitUpdates(ChatSession session) {
+        getView().showProgress();
+        sessionModule.updateSession(session)
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to update session "+session);
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("提交失败");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            getView().showToast("提交成功");
+                            getView().exit();
                         }
                     }
                 });
