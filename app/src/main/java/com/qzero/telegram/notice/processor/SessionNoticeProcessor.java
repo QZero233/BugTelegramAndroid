@@ -8,6 +8,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.SessionModule;
@@ -18,6 +19,7 @@ import com.qzero.telegram.notice.bean.NoticeAction;
 import com.qzero.telegram.notice.bean.NoticeDataType;
 import com.qzero.telegram.utils.LocalStorageUtils;
 
+import org.greenrobot.greendao.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
     private BroadcastModule broadcastModule;
 
     private ChatSessionDao sessionDao;
+    private ChatMemberDao memberDao;
 
     public SessionNoticeProcessor(Context context) {
         this.context = context;
@@ -43,6 +46,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
         broadcastModule=new BroadcastModuleImpl(context);
 
         sessionDao= SessionManager.getInstance(context).getSession().getChatSessionDao();
+        memberDao= SessionManager.getInstance(context).getSession().getChatMemberDao();
     }
 
     @Override
@@ -59,27 +63,8 @@ public class SessionNoticeProcessor implements NoticeProcessor {
         switch (action.getActionType()){
             case "newSession":
                 sessionModule.getSession(sessionId)
-                        .subscribe(new Observer<ChatSession>() {
-                            @Override
-                            public void onSubscribe(@NonNull Disposable d) {
-
-                            }
-
-                            @Override
-                            public void onNext(@NonNull ChatSession session) {
-
-                            }
-
-                            @Override
-                            public void onError(@NonNull Throwable e) {
-                                log.error("Failed to sync session with id "+sessionId,e);
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
-                            }
-                        });
+                        .subscribe(null,e -> {log.error("Failed to sync session with id "+sessionId,e);},
+                                ()->{broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);});
                 break;
             case "newMember":
                 String newMemberUserName=action.getParameter().get("memberUserName");
@@ -87,46 +72,25 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 if(newMemberUserName.equals(myName)){
                     //Which means I'm new here, I need to pull session info
                     sessionModule.getSession(sessionId)
-                            .subscribe(new Observer<ChatSession>() {
-                                @Override
-                                public void onSubscribe(@NonNull Disposable d) {
-
-                                }
-
-                                @Override
-                                public void onNext(@NonNull ChatSession session) {
-
-                                }
-
-                                @Override
-                                public void onError(@NonNull Throwable e) {
-                                    log.error("Failed to sync session with id "+sessionId,e);
-                                }
-
-                                @Override
-                                public void onComplete() {
-                                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
-                                }
-                            });
+                            .subscribe(null,e -> {log.error("Failed to sync session with id "+sessionId,e);},
+                                    ()->{broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);});
                 }else {
-                    session=sessionDao.load(sessionId);
-                    session.getChatMembers().add(new ChatMember(sessionId,newMemberUserName,ChatMember.LEVEL_NORMAL));
-                    sessionDao.insertOrReplace(session);
-                }
+                    ChatMember member=new ChatMember(sessionId,newMemberUserName,ChatMember.LEVEL_NORMAL);
+                    memberDao.save(member);
 
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                }
 
                 break;
             case "removeMember":
                 String removeMemberUserName=action.getParameter().get("memberUserName");
-                session=sessionDao.load(sessionId);
-                List<ChatMember> memberList=session.getChatMembers();
-                for(int i=0;i<memberList.size();i++){
-                    if(memberList.get(i).getUserName().equals(removeMemberUserName)){
-                        memberList.remove(i);
-                        break;
-                    }
-                }
-                sessionDao.insertOrReplace(session);
+
+                QueryBuilder queryBuilder=memberDao.queryBuilder();
+                queryBuilder.where(ChatMemberDao.Properties.UserName.eq(removeMemberUserName),ChatMemberDao.Properties.SessionId.eq(sessionId));
+                queryBuilder.buildDelete().executeDeleteWithoutDetachingEntities();
+
+                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+
                 break;
             case "updateMemberLevel":
                 String updateMemberUserName=action.getParameter().get("memberUserName");
@@ -155,8 +119,11 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 session=sessionDao.load(sessionId);
                 session.setSessionName(newName);
                 sessionDao.insertOrReplace(session);
+
+                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
                 break;
         }
+
 
         return true;
     }

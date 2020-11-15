@@ -118,7 +118,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
                 tv_name.setTextSize(20);
                 tv_name.setTextColor(Color.BLUE);
 
-                if(session.isDeleted()){
+                if(session.getDeleted()){
                     tv_name.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
                     tv_name.setTextColor(Color.GRAY);
                 }

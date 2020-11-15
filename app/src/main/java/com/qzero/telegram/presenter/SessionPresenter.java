@@ -64,7 +64,7 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
     @Override
     public void createNewSession(String sessionName) {
         getView().showProgress();
-        sessionModule.createSession(new ChatSession(null,sessionName,null,false))
+        sessionModule.createSession(new ChatSession(null,sessionName,false))
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
