@@ -22,7 +22,7 @@ public interface SessionService {
     @POST("/chat_session/")
     Observable<PackedObject> createSession(@Body PackedObject parameter);
 
-    @PUT("/chat_session/{session_id}/members")
+    @POST("/chat_session/{session_id}/members")
     Observable<PackedObject> addChatMember(@Path("session_id") String sessionId, @Query("member_user_name")String newMemberUserName);
 
     @DELETE("/chat_session/{session_id}/members")

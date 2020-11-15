@@ -36,7 +36,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply plugin
 
 greendao{
-    schemaVersion 5
+    schemaVersion 7
     daoPackage "com.qzero.telegram.dao.gen"
     targetGenDir 'src/main/java'
 }

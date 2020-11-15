@@ -5,6 +5,7 @@ import com.qzero.telegram.http.exchange.ParameterObject;
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.Property;
 
 import java.util.List;
@@ -26,7 +27,6 @@ public class ChatSession {
     @Property(nameInDb = "sessionName")
     private String sessionName;
 
-    @Property(nameInDb = "chatMembers")
     @ToMany(referencedJoinProperty = "sessionId")
     private List<ChatMember> chatMembers;
 
@@ -74,6 +74,16 @@ public class ChatSession {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    @Keep
+    public void setChatMembers(List<ChatMember> chatMembers) {
+        this.chatMembers = chatMembers;
+    }
+
+    @Keep
+    public boolean isDeleted() {
+        return deleted;
     }
 
     /**

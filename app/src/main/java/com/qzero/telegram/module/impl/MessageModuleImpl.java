@@ -56,7 +56,7 @@ public class MessageModuleImpl implements MessageModule {
     }
 
     @Override
-    public Observable<ActionResult> saveMessage(ChatMessage message) {
+    public Observable<ActionResult> sendMessage(ChatMessage message) {
         PackedObject parameter=objectFactory.getParameter(context);
         parameter.addObject(message);
         return service.saveMessage(parameter)
@@ -163,6 +163,16 @@ public class MessageModuleImpl implements MessageModule {
             } catch (IOException e) {
                 log.error("Failed to delete local message content with message id "+message.getMessageId(),e);
             }
+        }
+    }
+
+    @Override
+    public void saveLocalSystemNotice(ChatMessage message) {
+        messageDao.insertOrReplace(message);
+        try {
+            contentManager.saveMessageContent(message);
+        } catch (IOException e) {
+            log.error("Failed to save local system notice content");
         }
     }
 }

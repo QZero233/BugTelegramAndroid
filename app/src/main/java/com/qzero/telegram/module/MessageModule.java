@@ -11,7 +11,7 @@ public interface MessageModule {
 
     Observable<ChatMessage> getMessage(String messageId);
 
-    Observable<ActionResult> saveMessage(ChatMessage message);
+    Observable<ActionResult> sendMessage(ChatMessage message);
 
     Observable<ActionResult> deleteMessage(String messageId);
 
@@ -24,4 +24,7 @@ public interface MessageModule {
     void deleteMessageLocallyPhysically(String messageId);
 
     void deleteAllMessagesLocally();
+
+    void saveLocalSystemNotice(ChatMessage message);
+
 }

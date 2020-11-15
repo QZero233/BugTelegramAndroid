@@ -101,7 +101,11 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
         RxAdapterView.itemLongClicks(lv_messages)
                 .subscribe(i -> {
                     ChatMessage message=messageList.get(i);
-                    showDeleteConfirmDialog(message.getMessageId(),message.getMessageStatus().equals("deleted"));
+                    if(message.getMessageType()==null){
+                        //Normal message
+                        showDeleteConfirmDialog(message.getMessageId(),message.getMessageStatus().equals("deleted"));
+                    }
+
                 });
     }
 
@@ -158,6 +162,16 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 ChatMessage message=messageList.get(position);
+
+                if(message.getMessageType()!=null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)){
+                    //System notice, treat it specially
+                    View v=View.inflate(getContext(),R.layout.view_chat_message_system,null);
+
+                    TextView tv_system_notice=v.findViewById(R.id.tv_system_notice);
+                    tv_system_notice.setText(new String(message.getContent()));
+
+                    return v;
+                }
 
                 if(!message.getSenderUserName().equals(token.getOwnerUserName()) && message.getMessageStatus().equals("unread")){
                     presenter.markRead(message.getMessageId());

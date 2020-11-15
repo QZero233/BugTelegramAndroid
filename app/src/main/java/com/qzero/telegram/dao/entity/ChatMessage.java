@@ -14,6 +14,8 @@ import org.greenrobot.greendao.annotation.Generated;
 @Entity(nameInDb = "chat_message")
 public class ChatMessage {
 
+    public static final String TYPE_SYSTEM_NOTICE="";
+
     @Id
     @Property(nameInDb = "messageId")
     private String messageId;
@@ -33,17 +35,25 @@ public class ChatMessage {
     @Property(nameInDb = "messageStatus")
     private String messageStatus;
 
+    /**
+     * To mark which type of message it belongs to
+     * If it's null, it's normal message
+     */
+    @Property(nameInDb = "messageType")
+    private String messageType;
+
     public ChatMessage() {
     }
 
-    @Generated(hash = 444907706)
+    @Generated(hash = 986747747)
     public ChatMessage(String messageId, String senderUserName, String sessionId,
-            long sendTime, String messageStatus) {
+            long sendTime, String messageStatus, String messageType) {
         this.messageId = messageId;
         this.senderUserName = senderUserName;
         this.sessionId = sessionId;
         this.sendTime = sendTime;
         this.messageStatus = messageStatus;
+        this.messageType = messageType;
     }
 
     public String getMessageId() {
@@ -104,5 +114,13 @@ public class ChatMessage {
                 ", sendTime=" + sendTime +
                 ", messageStatus='" + messageStatus + '\'' +
                 '}';
+    }
+
+    public String getMessageType() {
+        return this.messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 }

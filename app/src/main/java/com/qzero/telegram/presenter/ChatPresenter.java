@@ -101,7 +101,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
         chatMessage.setMessageStatus("unread");
 
-        messageModule.saveMessage(chatMessage)
+        messageModule.sendMessage(chatMessage)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {

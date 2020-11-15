@@ -5,6 +5,7 @@ import android.content.Context;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatMessageDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.RetrofitHelper;
@@ -28,12 +29,15 @@ public class SessionModuleImpl implements SessionModule {
     private PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
 
     private ChatSessionDao sessionDao;
+    private ChatMemberDao memberDao;
 
     public SessionModuleImpl(Context context) {
         this.context = context;
         RetrofitHelper helper=RetrofitHelper.getInstance(context);
         sessionService=helper.getService(SessionService.class);
+
         sessionDao=SessionManager.getInstance(context).getSession().getChatSessionDao();
+        memberDao=SessionManager.getInstance(context).getSession().getChatMemberDao();
     }
 
     @Override
@@ -45,6 +49,7 @@ public class SessionModuleImpl implements SessionModule {
                     if(sessionList!=null){
                         for(ChatSession session:sessionList){
                             sessionDao.insertOrReplace(session);
+                            memberDao.insertOrReplaceInTx(session.getChatMembers());
                         }
                     }
                     return Observable.just(sessionList);
@@ -58,6 +63,7 @@ public class SessionModuleImpl implements SessionModule {
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ChatSession.class)))
                 .flatMap(session -> {
                     sessionDao.insertOrReplace(session);
+                    memberDao.insertOrReplaceInTx(session.getChatMembers());
                     return Observable.just(session);
                 });
     }
