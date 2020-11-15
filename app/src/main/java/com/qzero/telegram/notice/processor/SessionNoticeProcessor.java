@@ -5,18 +5,24 @@ import android.content.Intent;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.qzero.telegram.dao.SessionManager;
+import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.SessionModuleImpl;
 import com.qzero.telegram.notice.bean.DataNotice;
+import com.qzero.telegram.notice.bean.NoticeAction;
 import com.qzero.telegram.notice.bean.NoticeDataType;
+import com.qzero.telegram.utils.LocalStorageUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.List;
 
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observer;
@@ -29,10 +35,14 @@ public class SessionNoticeProcessor implements NoticeProcessor {
     private SessionModule sessionModule;
     private BroadcastModule broadcastModule;
 
+    private ChatSessionDao sessionDao;
+
     public SessionNoticeProcessor(Context context) {
         this.context = context;
         sessionModule=new SessionModuleImpl(context);
         broadcastModule=new BroadcastModuleImpl(context);
+
+        sessionDao= SessionManager.getInstance(context).getSession().getChatSessionDao();
     }
 
     @Override
@@ -41,40 +51,111 @@ public class SessionNoticeProcessor implements NoticeProcessor {
     }
 
     @Override
-    public boolean processNotice(DataNotice notice) {
-        URI uri=URI.create(notice.getDataUri());
-        String dataId=uri.getAuthority();
-        String detail=uri.getFragment();
-        log.debug(String.format("Processing session update with id %s and detail %s", dataId,detail));
+    public boolean processNotice(DataNotice notice, NoticeAction action) {
+        String sessionId=action.getDataId();
+        log.debug(String.format("Processing session update with id %s and action %s", sessionId,action.getActionType()));
+
+        ChatSession session;
+        switch (action.getActionType()){
+            case "newSession":
+                sessionModule.getSession(sessionId)
+                        .subscribe(new Observer<ChatSession>() {
+                            @Override
+                            public void onSubscribe(@NonNull Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onNext(@NonNull ChatSession session) {
+
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable e) {
+                                log.error("Failed to sync session with id "+sessionId,e);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                            }
+                        });
+                break;
+            case "newMember":
+                String newMemberUserName=action.getParameter().get("memberUserName");
+                String myName= LocalStorageUtils.getLocalTokenUserName(context);
+                if(newMemberUserName.equals(myName)){
+                    //Which means I'm new here, I need to pull session info
+                    sessionModule.getSession(sessionId)
+                            .subscribe(new Observer<ChatSession>() {
+                                @Override
+                                public void onSubscribe(@NonNull Disposable d) {
+
+                                }
+
+                                @Override
+                                public void onNext(@NonNull ChatSession session) {
+
+                                }
+
+                                @Override
+                                public void onError(@NonNull Throwable e) {
+                                    log.error("Failed to sync session with id "+sessionId,e);
+                                }
+
+                                @Override
+                                public void onComplete() {
+                                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                                }
+                            });
+                }else {
+                    session=sessionDao.load(sessionId);
+                    session.getChatMembers().add(new ChatMember(sessionId,newMemberUserName,ChatMember.LEVEL_NORMAL));
+                    sessionDao.insertOrReplace(session);
+                }
 
 
-        if(detail!=null && detail.equals("deleted")){
-            //SESSION deleted,use logical delete
-            sessionModule.deleteSessionLogically(dataId);
-            broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,dataId, BroadcastModule.ActionType.ACTION_TYPE_DELETE);
-        }else{
-            sessionModule.getSession(dataId)
-                    .subscribe(new Observer<ChatSession>() {
-                        @Override
-                        public void onSubscribe(@NonNull Disposable d) {
+                break;
+            case "removeMember":
+                String removeMemberUserName=action.getParameter().get("memberUserName");
+                session=sessionDao.load(sessionId);
+                List<ChatMember> memberList=session.getChatMembers();
+                for(int i=0;i<memberList.size();i++){
+                    if(memberList.get(i).getUserName().equals(removeMemberUserName)){
+                        memberList.remove(i);
+                        break;
+                    }
+                }
+                sessionDao.insertOrReplace(session);
+                break;
+            case "updateMemberLevel":
+                String updateMemberUserName=action.getParameter().get("memberUserName");
+                int newLevel=Integer.parseInt(action.getParameter().get("level"));
 
-                        }
+                session=sessionDao.load(sessionId);
+                List<ChatMember> memberList2=session.getChatMembers();
 
-                        @Override
-                        public void onNext(@NonNull ChatSession session) {
+                for(int i=0;i<memberList2.size();i++){
+                    ChatMember member=memberList2.get(i);
+                    if(member.getUserName().equals(updateMemberUserName)){
+                        member.setLevel(newLevel);
+                        memberList2.set(i,member);
+                        break;
+                    }
+                }
+                sessionDao.insertOrReplace(session);
+                break;
+            case "deleteSession":
+                sessionModule.deleteSessionLogically(sessionId);
+                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_DELETE);
+                break;
+            case "updateSessionName":
+                String newName=action.getParameter().get("name");
 
-                        }
-
-                        @Override
-                        public void onError(@NonNull Throwable e) {
-                            log.error("Failed to sync session with id "+dataId,e);
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,dataId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
-                        }
-                    });
+                session=sessionDao.load(sessionId);
+                session.setSessionName(newName);
+                sessionDao.insertOrReplace(session);
+                break;
         }
 
         return true;

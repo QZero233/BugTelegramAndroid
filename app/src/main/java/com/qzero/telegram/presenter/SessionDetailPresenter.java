@@ -59,13 +59,13 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
         for(ChatMember member:memberList){
             if(member.getUserName().equals(currentUserName)){
                 switch (member.getLevel()){
-                    case SessionModule.LEVEL_NORMAL:
+                    case ChatMember.LEVEL_NORMAL:
                         getView().showNormalUserMode();
                         break;
-                    case SessionModule.LEVEL_OPERATOR:
+                    case ChatMember.LEVEL_OPERATOR:
                         getView().showOperatorMode();
                         break;
-                    case SessionModule.LEVEL_OWNER:
+                    case ChatMember.LEVEL_OWNER:
                         getView().showOwnerMode();
                         break;
                     default:
@@ -81,7 +81,7 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     @Override
     public void addMember(String memberUserName) {
         getView().showProgress();
-        ChatMember member=new ChatMember(chatSession.getSessionId(),memberUserName,SessionModule.LEVEL_NORMAL);
+        ChatMember member=new ChatMember(chatSession.getSessionId(),memberUserName,ChatMember.LEVEL_NORMAL);
         sessionModule.addChatMember(member)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
@@ -155,7 +155,7 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     @Override
     public void updateMember(ChatMember chatMember) {
         getView().showProgress();
-        sessionModule.updateChatMember(chatMember)
+        sessionModule.updateChatMemberLevel(chatMember)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
@@ -285,7 +285,7 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     @Override
     public void submitUpdates(ChatSession session) {
         getView().showProgress();
-        sessionModule.updateSession(session)
+        sessionModule.updateSessionName(session)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {

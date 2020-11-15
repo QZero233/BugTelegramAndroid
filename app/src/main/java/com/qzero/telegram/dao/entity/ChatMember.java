@@ -5,6 +5,10 @@ import com.qzero.telegram.http.exchange.ParameterObject;
 @ParameterObject(name = "ChatMember")
 public class ChatMember {
 
+    public static final int LEVEL_NORMAL=0;
+    public static final int LEVEL_OPERATOR=1;
+    public static final int LEVEL_OWNER=2;
+
     private int chatMemberId;
 
     private String sessionId;

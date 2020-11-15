@@ -272,13 +272,13 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
 
                     String level="普通用户";
                     switch (member.getLevel()){
-                        case SessionModule.LEVEL_NORMAL:
+                        case ChatMember.LEVEL_NORMAL:
                             level="普通用户";
                             break;
-                        case SessionModule.LEVEL_OPERATOR:
+                        case ChatMember.LEVEL_OPERATOR:
                             level="管理员";
                             break;
-                        case SessionModule.LEVEL_OWNER:
+                        case ChatMember.LEVEL_OWNER:
                             level="会话拥有者";
                             break;
                     }

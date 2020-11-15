@@ -89,7 +89,7 @@ public class MessageModuleImpl implements MessageModule {
     public Observable<ActionResult> updateMessageStatus(String messageId, String newStatus) {
         PackedObject parameter=objectFactory.getParameter(context);
         parameter.addObject("messageStatus",newStatus);
-        return service.updateMessageStatus(messageId,parameter)
+        return service.updateMessageStatus(messageId,newStatus)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)))
                 .flatMap(actionResult -> {

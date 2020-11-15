@@ -23,7 +23,7 @@ public interface MessageService {
     Observable<PackedObject> deleteMessage(@Path("message_id") String messageId);
 
     @PUT("/message/{message_id}/status")
-    Observable<PackedObject> updateMessageStatus(@Path("message_id") String messageId,@Body PackedObject parameter);
+    Observable<PackedObject> updateMessageStatus(@Path("message_id") String messageId,@Query("status") String newStatus);
 
     @GET("/message/")
     Observable<PackedObject> getAllMessagesBySessionId(@Query("session_id") String sessionId);

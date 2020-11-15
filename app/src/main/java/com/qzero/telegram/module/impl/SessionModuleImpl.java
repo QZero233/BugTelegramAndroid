@@ -76,10 +76,7 @@ public class SessionModuleImpl implements SessionModule {
 
     @Override
     public Observable<ActionResult> addChatMember(ChatMember chatMember) {
-        PackedObject parameter=objectFactory.getPackedObject();
-        parameter.addObject(chatMember);
-
-        return sessionService.addChatMember(chatMember.getSessionId(),parameter)
+        return sessionService.addChatMember(chatMember.getSessionId(),chatMember.getUserName())
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
     }
@@ -120,11 +117,8 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
-    public Observable<ActionResult> updateSession(ChatSession session) {
-        PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
-        PackedObject parameter=objectFactory.getParameter(context);
-        parameter.addObject(session);
-        return sessionService.updateSession(session.getSessionId(),parameter)
+    public Observable<ActionResult> updateSessionName(ChatSession session) {
+        return sessionService.updateSessionName(session.getSessionId(),session.getSessionName())
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> {
                     ActionResult actionResult=packedObject.parseObject(ActionResult.class);
@@ -138,11 +132,11 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
-    public Observable<ActionResult> updateChatMember(ChatMember chatMember) {
+    public Observable<ActionResult> updateChatMemberLevel(ChatMember chatMember) {
         PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
         PackedObject parameter=objectFactory.getParameter(context);
         parameter.addObject(chatMember);
-        return sessionService.updateChatMember(chatMember.getUserName(),chatMember.getSessionId(),parameter)
+        return sessionService.updateChatMemberLevel(chatMember.getUserName(),chatMember.getSessionId(),chatMember.getLevel())
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> {
                    ActionResult  actionResult=packedObject.parseObject(ActionResult.class);

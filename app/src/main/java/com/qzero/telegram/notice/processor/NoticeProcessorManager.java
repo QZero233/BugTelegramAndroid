@@ -1,11 +1,16 @@
 package com.qzero.telegram.notice.processor;
 
 import android.content.Context;
+import android.text.TextUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.NoticeModule;
 import com.qzero.telegram.module.impl.NoticeModuleImpl;
 import com.qzero.telegram.notice.bean.DataNotice;
+import com.qzero.telegram.notice.bean.NoticeAction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +43,16 @@ public class NoticeProcessorManager {
 
     private NoticeModule noticeModule;
 
+    private ObjectMapper objectMapper;
+
     public NoticeProcessorManager(Context context) {
         this.context = context;
         noticeModule=new NoticeModuleImpl(context);
 
         loadProcessors();
+
+        objectMapper=new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     private void loadProcessors(){
@@ -57,15 +67,26 @@ public class NoticeProcessorManager {
 
     private void processNoticeList(List<DataNotice> noticeList){
         for(DataNotice notice:noticeList){
-            URI uri=URI.create(notice.getDataUri());
-            String dataType=uri.getScheme();
+            String actionDetail=notice.getActionDetail();
 
-            String dataId=uri.getAuthority();
-            String detail=uri.getFragment();
+            if(TextUtils.isEmpty(actionDetail)){
+                noticeModule.deleteNotice(notice.getNoticeId()).subscribe(actionResult -> {log.debug("Deleted empty notice with id "+notice.getNoticeId());},
+                        e -> {log.error("Failed to delete notice with id "+notice.getNoticeId(),e);});
+                return;
+            }
 
-            NoticeProcessor processor=processorMap.get(dataType);
+            NoticeAction action;
+            try {
+                action=objectMapper.readValue(actionDetail,NoticeAction.class);
+            } catch (JsonProcessingException e) {
+                log.error("Failed to parse notice action with id "+notice.getNoticeId(),e);
+                return;
+            }
+
+            NoticeProcessor processor=processorMap.get(action.getDataType());
             if(processorMap!=null){
-                if(processor.processNotice(notice)){
+                notice.setActionDetail(null);
+                if(processor.processNotice(notice,action)){
                     //Do deleting
                     noticeModule.deleteNotice(notice.getNoticeId())
                             .subscribe(new Observer<ActionResult>() {

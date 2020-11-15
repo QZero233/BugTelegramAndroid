@@ -7,7 +7,7 @@ public class DataNotice {
 
     private String targetUserName;
 
-    private String dataUri;
+    private String actionDetail;
 
     private Long generateTime;
 
@@ -30,12 +30,12 @@ public class DataNotice {
         this.targetUserName = targetUserName;
     }
 
-    public String getDataUri() {
-        return dataUri;
+    public String getActionDetail() {
+        return actionDetail;
     }
 
-    public void setDataUri(String dataUri) {
-        this.dataUri = dataUri;
+    public void setActionDetail(String actionDetail) {
+        this.actionDetail = actionDetail;
     }
 
     public Long getGenerateTime() {
@@ -51,7 +51,7 @@ public class DataNotice {
         return "DataNotice{" +
                 "noticeId='" + noticeId + '\'' +
                 ", targetUserName='" + targetUserName + '\'' +
-                ", dataUri='" + dataUri + '\'' +
+                ", actionDetail='" + actionDetail + '\'' +
                 ", generateTime=" + generateTime +
                 '}';
     }

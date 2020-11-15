@@ -10,10 +10,6 @@ import io.reactivex.rxjava3.core.Observable;
 
 public interface SessionModule {
 
-    int LEVEL_NORMAL=0;
-    int LEVEL_OPERATOR=1;
-    int LEVEL_OWNER=2;
-
     Observable<List<ChatSession>> getAllSessions();
 
     Observable<ChatSession> getSession(String sessionId);
@@ -28,9 +24,9 @@ public interface SessionModule {
 
     Observable<ActionResult> deleteSession(String sessionId);
 
-    Observable<ActionResult> updateSession(ChatSession session);
+    Observable<ActionResult> updateSessionName(ChatSession session);
 
-    Observable<ActionResult> updateChatMember(ChatMember chatMember);
+    Observable<ActionResult> updateChatMemberLevel(ChatMember chatMember);
 
     void deleteSessionPhysically(String sessionId);
 

@@ -1,6 +1,7 @@
 package com.qzero.telegram.notice.processor;
 
 import com.qzero.telegram.notice.bean.DataNotice;
+import com.qzero.telegram.notice.bean.NoticeAction;
 import com.qzero.telegram.notice.bean.NoticeDataType;
 
 public interface NoticeProcessor {
@@ -11,6 +12,6 @@ public interface NoticeProcessor {
      * Process a data notice
      * @return if the value is true,the notice will be deleted from server
      */
-    boolean processNotice(DataNotice notice);
+    boolean processNotice(DataNotice notice, NoticeAction action);
 
 }
