@@ -7,11 +7,15 @@ import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.dao.entity.UserInfo;
+import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.dao.gen.UserInfoDao;
 import com.qzero.telegram.http.bean.ActionResult;
+import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.SessionModule;
+import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.SessionModuleImpl;
+import com.qzero.telegram.notice.bean.NoticeDataType;
 import com.qzero.telegram.utils.LocalStorageUtils;
 
 import org.slf4j.Logger;
@@ -29,18 +33,25 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     private Logger log= LoggerFactory.getLogger(getClass());
 
     private SessionModule sessionModule;
+    private BroadcastModule broadcastModule;
+
     private ChatSession chatSession;
 
     private ChatSessionDao sessionDao;
+    private ChatMemberDao memberDao;
 
     private UserInfoDao userInfoDao;
 
     @Override
     public void attachView(@NonNull SessionDetailContract.View mView) {
         super.attachView(mView);
+
         sessionModule=new SessionModuleImpl(mView.getContext());
+        broadcastModule=new BroadcastModuleImpl(mView.getContext());
+
         sessionDao= SessionManager.getInstance(mView.getContext()).getSession().getChatSessionDao();
         userInfoDao= SessionManager.getInstance(mView.getContext()).getSession().getUserInfoDao();
+        memberDao=SessionManager.getInstance(mView.getContext()).getSession().getChatMemberDao();
     }
 
     @Override
@@ -53,26 +64,23 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
             return;
         }
 
-        //Set role
         String currentUserName= LocalStorageUtils.getLocalTokenUserName(getView().getContext());
-        List<ChatMember> memberList=chatSession.getChatMembers();
-        for(ChatMember member:memberList){
-            if(member.getUserName().equals(currentUserName)){
-                switch (member.getLevel()){
-                    case ChatMember.LEVEL_NORMAL:
-                        getView().showNormalUserMode();
-                        break;
-                    case ChatMember.LEVEL_OPERATOR:
-                        getView().showOperatorMode();
-                        break;
-                    case ChatMember.LEVEL_OWNER:
-                        getView().showOwnerMode();
-                        break;
-                    default:
-                        getView().showNormalUserMode();
-                        break;
-                }
-            }
+        ChatMember member=memberDao.queryBuilder().where(ChatMemberDao.Properties.UserName.eq(currentUserName),
+                ChatMemberDao.Properties.SessionId.eq(sessionId)).uniqueOrThrow();
+
+        switch (member.getLevel()){
+            case ChatMember.LEVEL_NORMAL:
+                getView().showNormalUserMode();
+                break;
+            case ChatMember.LEVEL_OPERATOR:
+                getView().showOperatorMode();
+                break;
+            case ChatMember.LEVEL_OWNER:
+                getView().showOwnerMode();
+                break;
+            default:
+                getView().showNormalUserMode();
+                break;
         }
 
         getView().loadSessionInfo(chatSession);
@@ -145,7 +153,6 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
                         if(isViewAttached()){
                             getView().hideProgress();
                             getView().showToast("移除成功");
-                            getView().exit();
                         }
                     }
                 });
@@ -315,5 +322,26 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
                         }
                     }
                 });
+    }
+
+    @Override
+    public void registerListener() {
+        broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION, (dataId, actionType) -> {
+            if(!isViewAttached())
+                return;
+
+            if(actionType== BroadcastModule.ActionType.ACTION_TYPE_DELETE){
+                chatSession.setDeleted(true);
+                getView().showDeletedMode();
+                getView().loadSessionInfo(chatSession);
+            }else{
+                initView(chatSession.getSessionId());
+            }
+        });
+    }
+
+    @Override
+    public void unregisterListener() {
+        broadcastModule.unregisterAllReceivers();
     }
 }

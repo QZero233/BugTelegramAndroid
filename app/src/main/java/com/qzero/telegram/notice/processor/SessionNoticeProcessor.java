@@ -31,6 +31,7 @@ import java.net.URI;
 import java.util.List;
 
 import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 
@@ -67,6 +68,8 @@ public class SessionNoticeProcessor implements NoticeProcessor {
         String sessionId=action.getDataId();
         log.debug(String.format("Processing session update with id %s and action %s", sessionId,action.getActionType()));
 
+        String myName= LocalStorageUtils.getLocalTokenUserName(context);
+
         ChatSession session;
         switch (action.getActionType()){
             case "newSession":
@@ -76,15 +79,15 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 break;
             case "newMember":
                 String newMemberUserName=action.getParameter().get("memberUserName");
-                String myName= LocalStorageUtils.getLocalTokenUserName(context);
                 if(newMemberUserName.equals(myName)){
                     //Which means I'm new here, I need to pull session info
-                    sessionModule.getSession(sessionId)
-                            .subscribe(o->{},e -> {log.error("Failed to sync session with id "+sessionId,e);},
-                                    ()->{
-                                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
-                                addSystemNotice(sessionId,notice.getGenerateTime(), String.format("你已被 %s 邀请加入群聊", action.getOperator()));
-                            });
+                    Observable<ChatSession> sessionObservable= sessionModule.getSession(sessionId);
+                    Observable<List<ChatMessage>> messageObservable= messageModule.getAllMessagesBySessionIdRemotely(sessionId);
+                    Observable.zip(sessionObservable,messageObservable,(chatSession,message) -> {
+                        addSystemNotice(sessionId,notice.getGenerateTime(), String.format("你已被 %s 邀请加入群聊", action.getOperator()));
+                        broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                        return Observable.just(0);
+                    }).subscribe(o -> {});
                 }else {
                     ChatMember member=new ChatMember(sessionId,newMemberUserName,ChatMember.LEVEL_NORMAL);
                     memberDao.save(member);
@@ -100,15 +103,22 @@ public class SessionNoticeProcessor implements NoticeProcessor {
             case "removeMember":
                 String removeMemberUserName=action.getParameter().get("memberUserName");
 
-                QueryBuilder queryBuilder=memberDao.queryBuilder();
-                queryBuilder.where(ChatMemberDao.Properties.UserName.eq(removeMemberUserName),ChatMemberDao.Properties.SessionId.eq(sessionId));
-                queryBuilder.buildDelete().executeDeleteWithoutDetachingEntities();
+                if (removeMemberUserName.equals(myName)){
+                    //You're kicked out
+                    ChatSession sessionDelete=sessionDao.load(sessionId);
+                    sessionDelete.setDeleted(true);
+                    sessionDao.insertOrReplace(sessionDelete);
+                    addSystemNotice(sessionId,notice.getGenerateTime(), String.format("您 已被 %s 移出群聊" ,action.getOperator()));
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_DELETE);
+                }else{
+                    QueryBuilder queryBuilder=memberDao.queryBuilder();
+                    queryBuilder.where(ChatMemberDao.Properties.UserName.eq(removeMemberUserName),ChatMemberDao.Properties.SessionId.eq(sessionId));
+                    queryBuilder.buildDelete().executeDeleteWithoutDetachingEntities();
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                    addSystemNotice(sessionId,notice.getGenerateTime(), String.format("%s 已被 %s 移出群聊", removeMemberUserName ,action.getOperator()));
+                }
 
                 sessionDao.detachAll();
-
-                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
-
-                addSystemNotice(sessionId,notice.getGenerateTime(), String.format("%s 已被 %s 移出群聊", removeMemberUserName ,action.getOperator()));
 
                 break;
             case "updateMemberLevel":

@@ -17,7 +17,9 @@ public interface MessageModule {
 
     Observable<ActionResult> updateMessageStatus(String messageId,String newStatus);
 
-    Observable<List<ChatMessage>> getAllMessagesBySessionId(String sessionId);
+    Observable<List<ChatMessage>> getAllMessagesBySessionIdRemotely(String sessionId);
+
+    List<ChatMessage> getAllMessagesBySessionIdLocally(String sessionId);
 
     void deleteMessageLocallyLogically(String messageId);
 

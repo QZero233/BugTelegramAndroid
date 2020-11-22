@@ -1,23 +1,30 @@
 package com.qzero.telegram.view.activity;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.jakewharton.rxbinding4.view.RxView;
 import com.jakewharton.rxbinding4.widget.RxAdapterView;
 import com.qzero.telegram.R;
@@ -42,9 +49,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class ChatActivity extends BaseActivity implements ChatContract.View{
+public class ChatActivity extends BaseActivity implements ChatContract.View {
 
-    private Logger log= LoggerFactory.getLogger(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     @BindView(R.id.btn_send)
     public Button btn_send;
@@ -54,13 +61,15 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
     public ListView lv_messages;
 
     private ChatContract.Presenter presenter;
-    private Token token;
 
     private List<ChatMessage> messageList;
 
     private String sessionId;
+    private String myName;
 
-    private boolean firstShowMessageList=true;
+    private boolean firstShowMessageList = true;
+
+    private boolean sessionDeleted=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,49 +78,39 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
         ButterKnife.bind(this);
 
-        sessionId=getIntent().getStringExtra("sessionId");
-        ChatSessionDao chatSessionDao= SessionManager.getInstance(getContext()).getSession().getChatSessionDao();
-        ChatSession session=chatSessionDao.load(sessionId);
-        if(session!=null && session.getDeleted()){
-            findViewById(R.id.ll_input).setVisibility(View.GONE);
-        }
-        if(session!=null){
-            setTitle(session.getSessionName());
-        }
+        sessionId = getIntent().getStringExtra("sessionId");
 
-        presenter=new ChatPresenter(sessionId);
+        presenter = new ChatPresenter(sessionId);
         presenter.attachView(this);
+
+        presenter.loadSessionInfo(sessionId);
+
         presenter.loadMessageList(sessionId);
         presenter.registerMessageBroadcastListener();
 
         lv_messages.setClickable(false);
 
         try {
-            token=new LocalDataStorageImpl(getContext()).getObject(LocalDataStorage.NAME_LOCAL_TOKEN,Token.class);
+            Token token = new LocalDataStorageImpl(getContext()).getObject(LocalDataStorage.NAME_LOCAL_TOKEN, Token.class);
+            myName = token.getOwnerUserName();
         } catch (IOException e) {
-            log.error("Failed to get token",e);
+            log.error("Failed to get token", e);
         }
 
         RxView.clicks(btn_send)
                 .subscribe(o -> {
-                    String message=et_content.getText().toString();
-                    presenter.sendMessage(token.getOwnerUserName(),message.getBytes());
+                    String message = et_content.getText().toString();
+                    presenter.sendMessage(myName, message.getBytes());
                 });
 
         RxAdapterView.itemLongClicks(lv_messages)
-                .subscribe(i -> {
-                    ChatMessage message=messageList.get(i);
-                    if(message.getMessageType()==null){
-                        //Normal message
-                        showDeleteConfirmDialog(message.getMessageId(),message.getMessageStatus().equals("deleted"));
-                    }
-
-                });
+                .subscribe(i -> showMessageEditDialog(i));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        presenter.unregisterMessageBroadcastListener();
         presenter.detachView();
     }
 
@@ -124,9 +123,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if(item.getItemId()==R.id.m_session){
-            Intent intent=new Intent(getContext(),SessionDetailActivity.class);
-            intent.putExtra("sessionId",sessionId);
+        if (item.getItemId() == R.id.m_session) {
+            Intent intent = new Intent(getContext(), SessionDetailActivity.class);
+            intent.putExtra("sessionId", sessionId);
             startActivity(intent);
         }
 
@@ -138,13 +137,13 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
         int position = lv_messages.getFirstVisiblePosition();
         View view = lv_messages.getChildAt(0);
-        int top = view==null ? 0:view.getTop();
+        int top = view == null ? 0 : view.getTop();
 
-        this.messageList=messageList;
+        this.messageList = messageList;
         lv_messages.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
-                if(messageList==null)
+                if (messageList == null)
                     return 0;
                 return messageList.size();
             }
@@ -161,81 +160,92 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
-                ChatMessage message=messageList.get(position);
+                ChatMessage message = messageList.get(position);
 
-                if(message.getMessageType()!=null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)){
+                if (message.getMessageType() != null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)) {
                     //System notice, treat it specially
-                    View v=View.inflate(getContext(),R.layout.view_chat_message_system,null);
+                    View v = View.inflate(getContext(), R.layout.view_chat_message_system, null);
 
-                    TextView tv_system_notice=v.findViewById(R.id.tv_system_notice);
+                    TextView tv_system_notice = v.findViewById(R.id.tv_system_notice);
                     tv_system_notice.setText(new String(message.getContent()));
 
                     return v;
                 }
 
-                if(!message.getSenderUserName().equals(token.getOwnerUserName()) && message.getMessageStatus().equals("unread")){
+                /*if (!message.getSenderUserName().equals(myName) && message.getMessageStatus().equals("unread")) {
                     presenter.markRead(message.getMessageId());
-                }
+                }*/
 
-                View v=View.inflate(getContext(),R.layout.view_chat_message,null);
+                View v = View.inflate(getContext(), R.layout.view_chat_message, null);
 
-                TextView tv_msg=v.findViewById(R.id.tv_msg);
-                TextView tv_time=v.findViewById(R.id.tv_time);
-                TextView tv_status=v.findViewById(R.id.tv_status);
-                TextView tv_sender=v.findViewById(R.id.tv_sender);
+                TextView tv_msg = v.findViewById(R.id.tv_msg);
+                TextView tv_time = v.findViewById(R.id.tv_time);
+                TextView tv_status = v.findViewById(R.id.tv_status);
+                TextView tv_sender = v.findViewById(R.id.tv_sender);
 
                 tv_time.setText(TimeUtils.toStandardTime(message.getSendTime()));
                 tv_status.setText(message.getMessageStatus());
-                tv_sender.setText(message.getSenderUserName()+" :");
-                tv_status.setVisibility(View.GONE);
+                tv_sender.setText(message.getSenderUserName() + " :");
 
+                if(message.getMessageStatus()==null){
+                    tv_status.setVisibility(View.GONE);
+                }else{
+                    switch (message.getMessageStatus().toLowerCase()) {
+                        case "read":
+                            tv_status.setText("已读");
+                            tv_status.setTextColor(Color.GREEN);
+                            break;
+                        case "unread":
+                            tv_status.setText("未读");
+                            tv_status.setTextColor(Color.CYAN);
+                            break;
+                        case "urge":
+                            tv_status.setText("紧急");
+                            tv_status.setTextColor(Color.RED);
+                            break;
+                        case "useless":
+                            tv_status.setText("无用");
+                            tv_status.setTextColor(Color.DKGRAY);
+                            break;
+                        case ChatMessage.STATUS_DELETED:
+                            tv_status.setText("已删除");
 
-                switch (message.getMessageStatus().toLowerCase()){
-                    case "read":
-                        tv_status.setText("已读");
-                        tv_status.setTextColor(Color.GREEN);
-                        break;
-                    case "unread":
-                        tv_status.setText("未读");
-                        tv_status.setTextColor(Color.RED);
-                        break;
-                    case "deleted":
-                        tv_status.setText("已删除");
+                            tv_status.setTextColor(Color.GRAY);
+                            tv_status.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
+                            tv_status.setVisibility(View.VISIBLE);
 
-                        tv_status.setTextColor(Color.GRAY);
-                        tv_status.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
-                        tv_status.setVisibility(View.VISIBLE);
+                            tv_msg.setTextColor(Color.GRAY);
+                            tv_msg.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-                        tv_msg.setTextColor(Color.GRAY);
-                        tv_msg.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
+                            tv_time.setTextColor(Color.GRAY);
+                            tv_time.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-                        tv_time.setTextColor(Color.GRAY);
-                        tv_time.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
+                            tv_sender.setTextColor(Color.GRAY);
+                            tv_sender.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-                        tv_sender.setTextColor(Color.GRAY);
-                        tv_sender.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
-
-                        break;
-                    default:
-                        tv_status.setTextColor(Color.BLUE);
-                        tv_status.setVisibility(View.VISIBLE);
-                        break;
-                }
-
-
-                if(token!=null){
-                    if(token.getOwnerUserName().equals(message.getSenderUserName())){
-                        //Send by me
-                        tv_msg.setGravity(Gravity.RIGHT);
-                        tv_status.setGravity(Gravity.RIGHT);
-                        tv_time.setGravity(Gravity.RIGHT);
-
-                        tv_status.setVisibility(View.VISIBLE);
-                        tv_sender.setVisibility(View.GONE);
+                            break;
+                        case "empty":
+                            tv_status.setVisibility(View.GONE);
+                            break;
+                        default:
+                            tv_status.setTextColor(Color.BLUE);
+                            tv_status.setText(message.getMessageStatus());
+                            break;
                     }
                 }
 
-                if(message!=null && message.getContent()!=null){
+
+                if (myName.equals(message.getSenderUserName())) {
+                    //Send by me
+                    tv_msg.setGravity(Gravity.RIGHT);
+                    tv_status.setGravity(Gravity.RIGHT);
+                    tv_time.setGravity(Gravity.RIGHT);
+
+                    tv_sender.setVisibility(View.GONE);
+                }
+
+
+                if (message != null && message.getContent() != null) {
                     tv_msg.setText(new String(message.getContent()));
                 }
 
@@ -244,11 +254,11 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
             }
         });
 
-        if(!firstShowMessageList)
-            lv_messages.setSelectionFromTop(position , top );
-        else{
-            lv_messages.setSelection(lv_messages.getCount()-1);
-            firstShowMessageList=false;
+        if (!firstShowMessageList)
+            lv_messages.setSelectionFromTop(position, top);
+        else {
+            lv_messages.setSelection(lv_messages.getCount() - 1);
+            firstShowMessageList = false;
         }
     }
 
@@ -257,21 +267,162 @@ public class ChatActivity extends BaseActivity implements ChatContract.View{
         et_content.setText("");
     }
 
-    private void showDeleteConfirmDialog(String messageId,boolean isPhysical) {
-        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+    @Override
+    public void showDeletedMode() {
+        findViewById(R.id.ll_input).setVisibility(View.GONE);
+    }
 
-        if(isPhysical){
+    @Override
+    public void loadSessionInfo(ChatSession session) {
+        sessionDeleted=session.isDeleted();
+        setTitle(session.getSessionName());
+    }
+
+    private void showDeleteConfirmDialog(String messageId, boolean isPhysical) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        if(sessionDeleted){
+            isPhysical=true;
+        }
+
+        if (isPhysical) {
             builder.setMessage("是否永久删除此消息\n此操作不可逆");
             builder.setPositiveButton("删除", (dialog, which) -> {
-                presenter.deleteMessage(messageId,true);
+                presenter.deleteMessage(messageId, true);
             });
-        }else{
+        } else {
             builder.setMessage("是否删除此消息\n本地将仍然保有此消息");
-            builder.setPositiveButton("删除",(dialog,which) -> {
-                presenter.deleteMessage(messageId,false);
+            builder.setPositiveButton("删除", (dialog, which) -> {
+                presenter.deleteMessage(messageId, false);
             });
         }
 
-        builder.setNegativeButton("取消",null).setCancelable(false).show();
+        builder.setNegativeButton("取消", null).setCancelable(false).show();
+    }
+
+    private void showEditMessageStatusDialog(String messageId){
+        View v=View.inflate(getContext(),R.layout.view_edit_message_status,null);
+
+        String[] statusInEng={"unread","read","urge","useless"};
+        String[] statusInChs={"未读","已读","紧急","无用","自定义"};
+
+        Spinner sp_status=v.findViewById(R.id.sp_status);
+        TextInputLayout tll_status=v.findViewById(R.id.tll_status);
+        TextInputEditText et_status=v.findViewById(R.id.et_status);
+
+        sp_status.setAdapter(new ArrayAdapter(getContext(),R.layout.view_personal_info_sp_tv,statusInChs));
+
+        tll_status.setVisibility(View.GONE);
+
+        sp_status.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position==statusInChs.length-1){
+                    tll_status.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        builder.setCancelable(false).setView(v).setNegativeButton("取消",null)
+                .setPositiveButton("更改",((dialog, which) -> {
+                    String newStatus;
+                    if(sp_status.getSelectedItemPosition()==statusInChs.length-1){
+                        //Customized
+                        newStatus=et_status.getText().toString();
+                        if(TextUtils.isEmpty(newStatus) || newStatus.startsWith("#")){
+                            showToast("禁止为空或以#开头");
+                            return;
+                        }
+                    }else{
+                        //Preset
+                        newStatus=statusInEng[sp_status.getSelectedItemPosition()];
+                    }
+                    presenter.updateMessageStatus(messageId,newStatus);
+                })).show();
+    }
+
+    private AlertDialog messageEditDialog;
+    private void showMessageEditDialog(int position){
+        ChatMessage message=messageList.get(position);
+
+        View v=View.inflate(getContext(),R.layout.view_edit_message,null);
+
+        Button btn_delete=v.findViewById(R.id.btn_delete);
+        Button btn_copy=v.findViewById(R.id.btn_copy);
+        Button btn_edit_status=v.findViewById(R.id.btn_edit_status);
+
+        if(message.getMessageType()!=null){
+            switch (message.getMessageType()){
+                case ChatMessage.TYPE_SYSTEM_NOTICE:
+                    btn_edit_status.setVisibility(View.GONE);
+                    break;
+            }
+        }
+
+        if(message.getMessageStatus()!=null){
+            switch (message.getMessageStatus()){
+                case ChatMessage.STATUS_DELETED:
+                    btn_edit_status.setVisibility(View.GONE);
+                    break;
+            }
+        }
+
+        if(sessionDeleted){
+            btn_edit_status.setVisibility(View.GONE);
+        }
+
+        RxView.clicks(btn_delete)
+                .subscribe(u -> {
+                    String status=message.getMessageStatus();
+                    boolean physically=false;
+                    if(status!=null && status.equals(ChatMessage.STATUS_DELETED))
+                        physically=true;
+
+                    if(message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)){
+                        physically=true;
+                    }
+
+                    showDeleteConfirmDialog(message.getMessageId(),physically);
+
+                    if(messageEditDialog!=null){
+                        messageEditDialog.dismiss();
+                        messageEditDialog=null;
+                    }
+                });
+
+        RxView.clicks(btn_copy)
+                .subscribe(u -> {
+                   String content=new String(message.getContent());
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData mClipData = ClipData.newPlainText("messageContent"+message.getMessageId(), content);
+                    cm.setPrimaryClip(mClipData);
+
+                    showToast("复制成功");
+
+                    if(messageEditDialog!=null){
+                        messageEditDialog.dismiss();
+                        messageEditDialog=null;
+                    }
+                });
+
+        RxView.clicks(btn_edit_status)
+                .subscribe(u -> {
+                    showEditMessageStatusDialog(message.getMessageId());
+
+                    if(messageEditDialog!=null){
+                        messageEditDialog.dismiss();
+                        messageEditDialog=null;
+                    }
+                });
+
+
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        messageEditDialog=builder.setView(v).setNegativeButton("关闭",null).setCancelable(false).show();
     }
 }

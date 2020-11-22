@@ -26,7 +26,7 @@ import io.reactivex.rxjava3.core.Observable;
 
 public class MessageModuleImpl implements MessageModule {
 
-    private Logger log= LoggerFactory.getLogger(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private Context context;
     private MessageService service;
@@ -34,13 +34,13 @@ public class MessageModuleImpl implements MessageModule {
     private ChatMessageDao messageDao;
     private MessageContentManager contentManager;
 
-    private PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
+    private PackedObjectFactory objectFactory = new CommonPackedObjectFactory();
 
     public MessageModuleImpl(Context context) {
         this.context = context;
-        service= RetrofitHelper.getInstance(context).getService(MessageService.class);
-        messageDao= SessionManager.getInstance(context).getSession().getChatMessageDao();
-        contentManager=new MessageContentManagerImpl(context);
+        service = RetrofitHelper.getInstance(context).getService(MessageService.class);
+        messageDao = SessionManager.getInstance(context).getSession().getChatMessageDao();
+        contentManager = new MessageContentManagerImpl(context);
     }
 
     @Override
@@ -57,13 +57,13 @@ public class MessageModuleImpl implements MessageModule {
 
     @Override
     public Observable<ActionResult> sendMessage(ChatMessage message) {
-        PackedObject parameter=objectFactory.getParameter(context);
+        PackedObject parameter = objectFactory.getParameter(context);
         parameter.addObject(message);
         return service.saveMessage(parameter)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)))
                 .flatMap(actionResult -> {
-                    if(actionResult.isSucceeded()){
+                    if (actionResult.isSucceeded()) {
                         message.setMessageId(actionResult.getMessage());
                         messageDao.insertOrReplace(message);
                         contentManager.saveMessageContent(message);
@@ -78,7 +78,7 @@ public class MessageModuleImpl implements MessageModule {
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)))
                 .flatMap(actionResult -> {
-                    if(actionResult.isSucceeded()){
+                    if (actionResult.isSucceeded()) {
                         deleteMessageLocallyLogically(messageId);
                     }
                     return Observable.just(actionResult);
@@ -87,49 +87,49 @@ public class MessageModuleImpl implements MessageModule {
 
     @Override
     public Observable<ActionResult> updateMessageStatus(String messageId, String newStatus) {
-        PackedObject parameter=objectFactory.getParameter(context);
-        parameter.addObject("messageStatus",newStatus);
-        return service.updateMessageStatus(messageId,newStatus)
+        PackedObject parameter = objectFactory.getParameter(context);
+        parameter.addObject("messageStatus", newStatus);
+        return service.updateMessageStatus(messageId, newStatus)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)))
                 .flatMap(actionResult -> {
-                    if(actionResult.isSucceeded()){
-                        updateMessageStatusLocally(messageId,newStatus);
+                    if (actionResult.isSucceeded()) {
+                        updateMessageStatusLocally(messageId, newStatus);
                     }
                     return Observable.just(actionResult);
                 });
     }
 
     @Override
-    public Observable<List<ChatMessage>> getAllMessagesBySessionId(String sessionId) {
-        List<ChatMessage> messageListLocal=messageDao.queryBuilder().orderAsc(ChatMessageDao.Properties.SendTime).where(ChatMessageDao.Properties.SessionId.eq(sessionId)).list();
-        if(messageListLocal==null || messageListLocal.isEmpty()) {
-            return service.getAllMessagesBySessionId(sessionId)
-                    .compose(DefaultTransformer.getInstance(context))
-                    .flatMap(packedObject -> Observable.just((List<ChatMessage>) packedObject.parseCollectionObject("messageList", List.class, ChatMessage.class)))
-                    .flatMap(messageList -> {
-                        for (ChatMessage message : messageList) {
-                            messageDao.insertOrReplace(message);
-                            contentManager.saveMessageContent(message);
-                        }
-                        return Observable.just(messageList);
-                    });
-        }else{
-            for(ChatMessage message:messageListLocal){
-                try {
-                    message.setContent(contentManager.getMessageContent(message.getMessageId()));
-                } catch (IOException e) {
-                    log.error("Failed to get message content with message id "+message.getMessageId(),e);
-                }
-            }
-            return Observable.just(messageListLocal);
-        }
-
+    public Observable<List<ChatMessage>> getAllMessagesBySessionIdRemotely(String sessionId) {
+        return service.getAllMessagesBySessionId(sessionId)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> Observable.just((List<ChatMessage>) packedObject.parseCollectionObject("messageList", List.class, ChatMessage.class)))
+                .flatMap(messageList -> {
+                    for (ChatMessage message : messageList) {
+                        messageDao.insertOrReplace(message);
+                        contentManager.saveMessageContent(message);
+                    }
+                    return Observable.just(messageList);
+                });
     }
 
-    private void updateMessageStatusLocally(String messageId,String newStatus){
-        ChatMessage message=messageDao.load(messageId);
-        if(message!=null){
+    @Override
+    public List<ChatMessage> getAllMessagesBySessionIdLocally(String sessionId) {
+        List<ChatMessage> messageListLocal = messageDao.queryBuilder().orderAsc(ChatMessageDao.Properties.SendTime).where(ChatMessageDao.Properties.SessionId.eq(sessionId)).list();
+        for (ChatMessage message : messageListLocal) {
+            try {
+                message.setContent(contentManager.getMessageContent(message.getMessageId()));
+            } catch (IOException e) {
+                log.error("Failed to get message content with message id " + message.getMessageId(), e);
+            }
+        }
+        return messageListLocal;
+    }
+
+    private void updateMessageStatusLocally(String messageId, String newStatus) {
+        ChatMessage message = messageDao.load(messageId);
+        if (message != null) {
             message.setMessageStatus(newStatus);
             messageDao.insertOrReplace(message);
         }
@@ -137,31 +137,31 @@ public class MessageModuleImpl implements MessageModule {
 
     @Override
     public void deleteMessageLocallyLogically(String messageId) {
-        updateMessageStatusLocally(messageId,"deleted");
+        updateMessageStatusLocally(messageId, ChatMessage.STATUS_DELETED);
     }
 
     @Override
     public void deleteMessageLocallyPhysically(String messageId) {
-        ChatMessage message=messageDao.load(messageId);
-        if(message!=null){
+        ChatMessage message = messageDao.load(messageId);
+        if (message != null) {
             messageDao.delete(message);
             try {
                 contentManager.deleteMessageContent(messageId);
             } catch (IOException e) {
-                log.error("Failed to delete local message content with message id "+messageId,e);
+                log.error("Failed to delete local message content with message id " + messageId, e);
             }
         }
     }
 
     @Override
     public void deleteAllMessagesLocally() {
-        List<ChatMessage> messageList=messageDao.loadAll();
+        List<ChatMessage> messageList = messageDao.loadAll();
         messageDao.deleteAll();
-        for(ChatMessage message:messageList){
+        for (ChatMessage message : messageList) {
             try {
                 contentManager.deleteMessageContent(message.getMessageId());
             } catch (IOException e) {
-                log.error("Failed to delete local message content with message id "+message.getMessageId(),e);
+                log.error("Failed to delete local message content with message id " + message.getMessageId(), e);
             }
         }
     }

@@ -5,7 +5,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.qzero.telegram.contract.ChatContract;
+import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMessage;
+import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.MessageModule;
@@ -28,6 +31,8 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
     private MessageModule messageModule;
     private BroadcastModule broadcastModule;
 
+    private ChatSessionDao sessionDao;
+
     private Context context;
 
     private String sessionId;
@@ -45,44 +50,30 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
         messageModule=new MessageModuleImpl(context);
         broadcastModule=new BroadcastModuleImpl(context);
+
+        sessionDao= SessionManager.getInstance(mView.getContext()).getSession().getChatSessionDao();
+    }
+
+    @Override
+    public void loadSessionInfo(String sessionId) {
+        ChatSession session=sessionDao.load(sessionId);
+        if(session==null){
+            log.error(String.format("Can not find session with id %s locally", sessionId));
+            getView().showToast("错误，本地会话信息不存在");
+            return;
+        }
+
+        if(session.isDeleted()){
+            getView().showDeletedMode();
+        }
+
+        getView().loadSessionInfo(session);
     }
 
     @Override
     public void loadMessageList(String sessionId) {
-        if(isViewAttached())
-            getView().showProgress();
-
-        messageModule.getAllMessagesBySessionId(sessionId)
-                .subscribe(new Observer<List<ChatMessage>>() {
-                    @Override
-                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull List<ChatMessage> messageList) {
-                        ChatPresenter.this.messageList=messageList;
-                        if(isViewAttached()){
-                            getView().showMessageList(messageList);
-                        }
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                            getView().showToast("获取聊天记录失败");
-                        }
-                        log.error("Failed to get chat messages",e);
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
-                    }
-                });
+        messageList=messageModule.getAllMessagesBySessionIdLocally(sessionId);
+        getView().showMessageList(messageList);
     }
 
     @Override
@@ -99,7 +90,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
             getView().showMessageList(messageList);
         }
 
-        chatMessage.setMessageStatus("unread");
+        chatMessage.setMessageStatus("empty");
 
         messageModule.sendMessage(chatMessage)
                 .subscribe(new Observer<ActionResult>() {
@@ -133,6 +124,42 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
     }
 
     @Override
+    public void updateMessageStatus(String messageId, String newStatus) {
+        getView().showProgress();
+        messageModule.updateMessageStatus(messageId,newStatus)
+                .subscribe(new Observer<ActionResult>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
+
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        log.error("Failed to update message status with messageId "+messageId,e);
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        log.debug(String.format("Updated message status to %s with id %s", newStatus,messageId));
+                        if(isViewAttached()){
+                            getView().hideProgress();
+                            loadMessageList(sessionId);
+                        }
+                    }
+                });
+    }
+
+
+    //Do it in two-way session
+    /*@Override
     public void markRead(String messageId) {
         messageModule.updateMessageStatus(messageId,"read")
                 .subscribe(new Observer<ActionResult>() {
@@ -156,7 +183,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
                     }
                 });
-    }
+    }*/
 
     @Override
     public void deleteMessage(String messageId, boolean isPhysical) {
@@ -199,7 +226,24 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
     @Override
     public void registerMessageBroadcastListener() {
-        broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_MESSAGE, (dataId, actionType) -> loadMessageList(sessionId));
+        broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_MESSAGE, (dataId, actionType) -> {
+            if(!isViewAttached())
+                return;
+            loadMessageList(sessionId);
+        });
+
+        broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION,((dataId, actionType) -> {
+            if(!isViewAttached())
+                return;
+
+            if(actionType== BroadcastModule.ActionType.ACTION_TYPE_DELETE){
+                getView().showDeletedMode();
+            }else{
+                ChatSession session=sessionDao.load(sessionId);
+                getView().loadSessionInfo(session);
+            }
+
+        }));
     }
 
     @Override

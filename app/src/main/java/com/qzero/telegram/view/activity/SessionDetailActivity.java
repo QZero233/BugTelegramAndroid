@@ -74,6 +74,8 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
         String sessionId=getIntent().getStringExtra("sessionId");
         presenter.initView(sessionId);
 
+        presenter.registerListener();
+
         RxAdapterView.itemClickEvents(lv_members)
                 .subscribe(event -> {
                     Intent intent=new Intent(getContext(),UserInfoDetailActivity.class);
@@ -166,6 +168,8 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
         builder.setNegativeButton("取消",null).setCancelable(false).show();
     }
 
+    private AlertDialog operationDialog=null;
+
     private void showMemberOperatorDialog(int position,ChatMember member){
         View v=View.inflate(getContext(),R.layout.view_manage_member,null);
 
@@ -183,15 +187,23 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
                 .subscribe(u -> {
                     member.setLevel(sp_level.getSelectedItemPosition());
                     presenter.updateMember(member);
+                    if(operationDialog!=null){
+                        operationDialog.dismiss();
+                        operationDialog=null;
+                    }
                 });
         RxView.clicks(btn_remove)
                 .subscribe(u -> {
                     presenter.deleteMember(member.getUserName());
+                    if(operationDialog!=null){
+                        operationDialog.dismiss();
+                        operationDialog=null;
+                    }
                 });
 
 
         AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
-        builder.setView(v)
+        operationDialog=builder.setView(v)
                 .setNegativeButton("取消",null)
                 .setCancelable(false)
                 .show();
@@ -200,6 +212,7 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        presenter.unregisterListener();
         presenter.detachView();
     }
 

@@ -21,6 +21,9 @@ public class SessionDetailContract {
         void deleteSessionRemotely();
         void deleteSessionLocally();
         void submitUpdates(ChatSession session);
+
+        void registerListener();
+        void unregisterListener();
     }
 
     public interface View extends IBaseView {

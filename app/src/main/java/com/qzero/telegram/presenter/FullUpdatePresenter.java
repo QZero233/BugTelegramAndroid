@@ -37,16 +37,6 @@ public class FullUpdatePresenter extends BasePresenter<FullUpdateContract.View> 
 
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull Boolean aBoolean) {
-                        if(aBoolean){
-                            log.debug("Full update successfully");
-                            if(isViewAttached()){
-                                getView().showToast("Full update successfully,jumping to user center");
-                            }
-                        }else{
-                            if(isViewAttached()){
-                                getView().showToast("Full update failed,but you can do it later manually in settings");
-                            }
-                        }
 
                     }
 
@@ -63,9 +53,12 @@ public class FullUpdatePresenter extends BasePresenter<FullUpdateContract.View> 
 
                     @Override
                     public void onComplete() {
+                        log.debug("Full update successfully");
                         if(isViewAttached()){
+                            getView().showToast("Full update successfully,jumping to user center");
                             getView().hideProgress();
                             getView().jumpToUserCenter();
+                            fullUpdateModule.setUpdated();
                         }
                     }
                 });

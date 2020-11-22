@@ -14,7 +14,9 @@ import org.greenrobot.greendao.annotation.Generated;
 @Entity(nameInDb = "chat_message")
 public class ChatMessage {
 
-    public static final String TYPE_SYSTEM_NOTICE="";
+    public static final String STATUS_DELETED="#deleted";
+
+    public static final String TYPE_SYSTEM_NOTICE="systemNotice";
 
     @Id
     @Property(nameInDb = "messageId")

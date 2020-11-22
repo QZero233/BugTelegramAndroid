@@ -50,15 +50,18 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
 
     @Override
     public void registerSessionBroadcastReceiver() {
-        broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION, (dataId, actionType) -> {
-            log.debug(String.format("Got session update broadcast with id %s and action %s", dataId,actionType+""));
-            getSessionList();
-        });
+        if(broadcastModule!=null){
+            broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION, (dataId, actionType) -> {
+                log.debug(String.format("Got session update broadcast with id %s and action %s", dataId,actionType+""));
+                getSessionList();
+            });
+        }
     }
 
     @Override
     public void unregisterSessionBroadcastReceiver() {
-        broadcastModule.unregisterAllReceivers();
+        if(broadcastModule!=null)
+            broadcastModule.unregisterAllReceivers();
     }
 
     @Override

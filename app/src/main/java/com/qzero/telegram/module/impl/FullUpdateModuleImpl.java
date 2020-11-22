@@ -22,6 +22,7 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.BiFunction;
 
 public class FullUpdateModuleImpl implements FullUpdateModule {
 
@@ -95,16 +96,8 @@ public class FullUpdateModuleImpl implements FullUpdateModule {
     public Observable<Boolean> executeFullUpdate() {
         //Temporarily we full update session and message
         return sessionModule.getAllSessions()
-                .flatMap(sessions -> {
-                    //Message update will be done in ChatActivity
-                    //There do we just delete all messages
-                    messageModule.deleteAllMessagesLocally();
-                    return Observable.just(sessions!=null);
-                })
-                .flatMap(b -> {
-                    //Getting this place means update succeeded without error
-                    setUpdated();
-                    return Observable.just(b);
-                });
+                .flatMap(sessions -> Observable.fromIterable(sessions))
+                .flatMap(chatSession -> messageModule.getAllMessagesBySessionIdRemotely(chatSession.getSessionId()))
+                .flatMap(chatMessages -> Observable.just(true));
     }
 }
