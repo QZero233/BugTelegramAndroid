@@ -30,7 +30,7 @@ public class NoticeMonitorThread extends Thread {
         ip=service.getString(R.string.server_ip);
         port=connectInfo.getPort();
 
-        processorManager=new NoticeProcessorManager(service);
+        processorManager=NoticeProcessorManager.getInstance(service);
     }
 
     public boolean isConnectionAlive(){

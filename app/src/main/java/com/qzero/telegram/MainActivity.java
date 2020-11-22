@@ -11,6 +11,7 @@ import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.bean.Token;
 import com.qzero.telegram.module.FullUpdateModule;
 import com.qzero.telegram.module.impl.FullUpdateModuleImpl;
+import com.qzero.telegram.notice.processor.NoticeProcessorManager;
 import com.qzero.telegram.view.activity.FullUpdateActivity;
 import com.qzero.telegram.view.activity.LoginActivity;
 import com.qzero.telegram.view.activity.UserCenterActivity;
@@ -46,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(this, FullUpdateActivity.class));
                     finish();
                 }else{
-                    log.info("Don't need a full update,jump to userCenter");
+                    log.info("Don't need a full update, pull notices, jump to userCenter");
+                    NoticeProcessorManager.getInstance(this).getAndProcessNotice(false);
                     startActivity(new Intent(this, UserCenterActivity.class));
                     finish();
                 }

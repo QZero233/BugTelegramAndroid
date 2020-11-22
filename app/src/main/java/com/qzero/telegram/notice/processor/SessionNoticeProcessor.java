@@ -80,7 +80,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 if(newMemberUserName.equals(myName)){
                     //Which means I'm new here, I need to pull session info
                     sessionModule.getSession(sessionId)
-                            .subscribe(null,e -> {log.error("Failed to sync session with id "+sessionId,e);},
+                            .subscribe(o->{},e -> {log.error("Failed to sync session with id "+sessionId,e);},
                                     ()->{
                                 broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
                                 addSystemNotice(sessionId,notice.getGenerateTime(), String.format("你已被 %s 邀请加入群聊", action.getOperator()));
@@ -88,6 +88,8 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 }else {
                     ChatMember member=new ChatMember(sessionId,newMemberUserName,ChatMember.LEVEL_NORMAL);
                     memberDao.save(member);
+
+                    sessionDao.detachAll();
 
                     broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
 
@@ -101,6 +103,8 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 QueryBuilder queryBuilder=memberDao.queryBuilder();
                 queryBuilder.where(ChatMemberDao.Properties.UserName.eq(removeMemberUserName),ChatMemberDao.Properties.SessionId.eq(sessionId));
                 queryBuilder.buildDelete().executeDeleteWithoutDetachingEntities();
+
+                sessionDao.detachAll();
 
                 broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
 

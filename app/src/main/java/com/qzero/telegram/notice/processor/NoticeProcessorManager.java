@@ -45,7 +45,15 @@ public class NoticeProcessorManager {
 
     private ObjectMapper objectMapper;
 
-    public NoticeProcessorManager(Context context) {
+    private static NoticeProcessorManager instance;
+
+    public static NoticeProcessorManager getInstance(Context context){
+        if(instance==null)
+            instance=new NoticeProcessorManager(context);
+        return instance;
+    }
+
+    private NoticeProcessorManager(Context context) {
         this.context = context;
         noticeModule=new NoticeModuleImpl(context);
 
