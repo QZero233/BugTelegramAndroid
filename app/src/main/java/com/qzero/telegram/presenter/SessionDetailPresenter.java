@@ -6,6 +6,7 @@ import com.qzero.telegram.contract.SessionDetailContract;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.entity.UserInfo;
 import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
@@ -290,9 +291,9 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     }
 
     @Override
-    public void submitUpdates(ChatSession session) {
+    public void updateSessionName(String newSessionName) {
         getView().showProgress();
-        sessionModule.updateSessionName(session)
+        sessionModule.updateSessionParameter(chatSession.getSessionId(), ChatSessionParameter.NAME_SESSION_NAME,newSessionName)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
@@ -306,7 +307,7 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
 
                     @Override
                     public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        log.error("Failed to update session "+session);
+                        log.error("Failed to update session "+chatSession);
                         if(isViewAttached()){
                             getView().hideProgress();
                             getView().showToast("提交失败");
@@ -323,6 +324,7 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
                     }
                 });
     }
+
 
     @Override
     public void registerListener() {
@@ -343,5 +345,10 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     @Override
     public void unregisterListener() {
         broadcastModule.unregisterAllReceivers();
+    }
+
+    @Override
+    public String getSessionName() {
+        return sessionModule.getSessionParameterLocally(chatSession.getSessionId(),ChatSessionParameter.NAME_SESSION_NAME);
     }
 }

@@ -5,9 +5,11 @@ import android.content.Context;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatMessageDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
+import com.qzero.telegram.dao.gen.ChatSessionParameterDao;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.http.exchange.CommonPackedObjectFactory;
@@ -30,6 +32,7 @@ public class SessionModuleImpl implements SessionModule {
 
     private ChatSessionDao sessionDao;
     private ChatMemberDao memberDao;
+    private ChatSessionParameterDao parameterDao;
 
     public SessionModuleImpl(Context context) {
         this.context = context;
@@ -38,7 +41,37 @@ public class SessionModuleImpl implements SessionModule {
 
         sessionDao=SessionManager.getInstance(context).getSession().getChatSessionDao();
         memberDao=SessionManager.getInstance(context).getSession().getChatMemberDao();
+        parameterDao=SessionManager.getInstance(context).getSession().getChatSessionParameterDao();
     }
+
+    private void insertChatMemberAndParameters(ChatSession session){
+        List<ChatMember> memberList=session.getChatMembers();
+        if(memberList!=null){
+            for(ChatMember member:memberList){
+                ChatMember member1=memberDao.queryBuilder().where(ChatMemberDao.Properties.SessionId.eq(session.getSessionId()),
+                        ChatMemberDao.Properties.UserName.eq(member.getUserName())).unique();
+
+                if(member1!=null)
+                    memberDao.delete(member1);
+            }
+        }
+
+        List<ChatSessionParameter> parameterList=session.getSessionParameters();
+        if(memberList!=null){
+            for(ChatSessionParameter parameter:parameterList){
+                ChatSessionParameter parameter1=parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(session.getSessionId()),
+                        ChatSessionParameterDao.Properties.ParameterName.eq(parameter.getParameterName())).unique();
+
+                if(parameter1!=null)
+                    parameterDao.delete(parameter1);
+            }
+        }
+
+        memberDao.insertOrReplaceInTx(session.getChatMembers());
+        parameterDao.insertOrReplaceInTx(session.getSessionParameters());
+
+    }
+
 
     @Override
     public Observable<List<ChatSession>> getAllSessions() {
@@ -49,7 +82,7 @@ public class SessionModuleImpl implements SessionModule {
                     if(sessionList!=null){
                         for(ChatSession session:sessionList){
                             sessionDao.insertOrReplace(session);
-                            memberDao.insertOrReplaceInTx(session.getChatMembers());
+                            insertChatMemberAndParameters(session);
                         }
                     }
                     return Observable.just(sessionList);
@@ -63,7 +96,7 @@ public class SessionModuleImpl implements SessionModule {
                 .flatMap(packedObject -> Observable.just(packedObject.parseObject(ChatSession.class)))
                 .flatMap(session -> {
                     sessionDao.insertOrReplace(session);
-                    memberDao.insertOrReplaceInTx(session.getChatMembers());
+                    insertChatMemberAndParameters(session);
                     return Observable.just(session);
                 });
     }
@@ -123,18 +156,10 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
-    public Observable<ActionResult> updateSessionName(ChatSession session) {
-        return sessionService.updateSessionName(session.getSessionId(),session.getSessionName())
+    public Observable<ActionResult> updateSessionParameter(String sessionId,String parameterName,String parameterValue) {
+        return sessionService.updateSessionParameter(sessionId,parameterName,parameterValue)
                 .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> {
-                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
-
-                    if(actionResult.isSucceeded()){
-                        sessionDao.insertOrReplace(session);
-                    }
-
-                    return Observable.just(actionResult);
-                });
+                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
     }
 
     @Override
@@ -170,6 +195,16 @@ public class SessionModuleImpl implements SessionModule {
             session.setDeleted(true);
             sessionDao.update(session);
         }
+    }
+
+    @Override
+    public String getSessionParameterLocally(String sessionId, String parameterName) {
+        ChatSessionParameter parameter=parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(sessionId),
+                ChatSessionParameterDao.Properties.ParameterName.eq(parameterName)).unique();
+        if(parameter==null)
+            return null;
+
+        return parameter.getParameterValue();
     }
 
     @Override

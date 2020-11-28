@@ -31,8 +31,10 @@ public interface SessionService {
     @DELETE("/chat_session/{session_id}")
     Observable<PackedObject> deleteSession(@Path("session_id") String sessionId);
 
-    @PUT("/chat_session/{session_id}/name")
-    Observable<PackedObject> updateSessionName(@Path("session_id") String sessionId,@Query("name")String newSessionName);
+    @PUT("/chat_session/{session_id}/{parameter_name}")
+    Observable<PackedObject> updateSessionParameter(@Path("session_id") String sessionId,
+                                                    @Path("parameter_name")String parameterName,
+                                                    @Query("parameter_value")String parameterValue);
 
     @PUT("/chat_session/{session_id}/members/{member_user_name}/level")
     Observable<PackedObject> updateChatMemberLevel(@Path("member_user_name") String memberUserName,@Path("session_id") String sessionId,

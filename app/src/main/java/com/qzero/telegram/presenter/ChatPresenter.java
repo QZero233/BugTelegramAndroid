@@ -8,12 +8,15 @@ import com.qzero.telegram.contract.ChatContract;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMessage;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.MessageModule;
+import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.MessageModuleImpl;
+import com.qzero.telegram.module.impl.SessionModuleImpl;
 import com.qzero.telegram.notice.bean.NoticeDataType;
 
 import org.slf4j.Logger;
@@ -28,6 +31,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
+    private SessionModule sessionModule;
     private MessageModule messageModule;
     private BroadcastModule broadcastModule;
 
@@ -48,6 +52,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
         super.attachView(mView);
         context=mView.getContext();
 
+        sessionModule=new SessionModuleImpl(context);
         messageModule=new MessageModuleImpl(context);
         broadcastModule=new BroadcastModuleImpl(context);
 
@@ -249,5 +254,10 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
     @Override
     public void unregisterMessageBroadcastListener() {
         broadcastModule.unregisterAllReceivers();
+    }
+
+    @Override
+    public String getSessionName() {
+        return sessionModule.getSessionParameterLocally(sessionId, ChatSessionParameter.NAME_SESSION_NAME);
     }
 }

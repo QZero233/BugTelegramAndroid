@@ -275,7 +275,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void loadSessionInfo(ChatSession session) {
         sessionDeleted=session.isDeleted();
-        setTitle(session.getSessionName());
+        setTitle(presenter.getSessionName());
     }
 
     private void showDeleteConfirmDialog(String messageId, boolean isPhysical) {

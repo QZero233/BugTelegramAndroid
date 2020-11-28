@@ -24,12 +24,14 @@ public interface SessionModule {
 
     Observable<ActionResult> deleteSession(String sessionId);
 
-    Observable<ActionResult> updateSessionName(ChatSession session);
+    Observable<ActionResult> updateSessionParameter(String sessionId,String parameterName,String parameterValue);
 
     Observable<ActionResult> updateChatMemberLevel(ChatMember chatMember);
 
     void deleteSessionPhysically(String sessionId);
 
     void deleteSessionLogically(String sessionId);
+
+    String getSessionParameterLocally(String sessionId,String parameterName);
 
 }

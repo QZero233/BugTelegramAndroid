@@ -9,8 +9,10 @@ import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatMessage;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
+import com.qzero.telegram.dao.gen.ChatSessionParameterDao;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.MessageModule;
 import com.qzero.telegram.module.SessionModule;
@@ -46,6 +48,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
 
     private ChatSessionDao sessionDao;
     private ChatMemberDao memberDao;
+    private ChatSessionParameterDao parameterDao;
 
     public SessionNoticeProcessor(Context context) {
         this.context = context;
@@ -56,6 +59,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
 
         sessionDao= SessionManager.getInstance(context).getSession().getChatSessionDao();
         memberDao= SessionManager.getInstance(context).getSession().getChatMemberDao();
+        parameterDao=SessionManager.getInstance(context).getSession().getChatSessionParameterDao();
     }
 
     @Override
@@ -74,7 +78,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
         switch (action.getActionType()){
             case "newSession":
                 sessionModule.getSession(sessionId)
-                        .subscribe(null,e -> {log.error("Failed to sync session with id "+sessionId,e);},
+                        .subscribe(o-> {},e -> {log.error("Failed to sync session with id "+sessionId,e);},
                                 ()->{broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);});
                 break;
             case "newMember":
@@ -155,19 +159,39 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 addSystemNotice(sessionId,notice.getGenerateTime(), String.format("会话已被 %s 删除", action.getOperator()));
 
                 break;
-            case "updateSessionName":
-                String newName=action.getParameter().get("name");
-                session=sessionDao.load(sessionId);
+            case "updateSessionParameter":
+                String parameterName=action.getParameter().get("parameterName");
+                String parameterValue=action.getParameter().get("parameterValue");
 
-                String oldName=session.getSessionName();
+                ChatSessionParameter parameter=parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(sessionId),
+                        ChatSessionParameterDao.Properties.ParameterName.eq(parameterName)).unique();
 
-                session.setSessionName(newName);
-                sessionDao.insertOrReplace(session);
+                if(parameter==null){
+                    parameter=new ChatSessionParameter(null,sessionId,parameterName,parameterValue);
+                }else{
+                    parameter.setParameterValue(parameterValue);
+                }
+                parameterDao.insertOrReplace(parameter);
 
-                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                sessionDao.detachAll();
 
-                addSystemNotice(sessionId,notice.getGenerateTime(), String.format("会话已被 %s 由 %s 改名为 %s", action.getOperator(),oldName,newName));
+                break;
+            case "deleteSessionParameter":
+                String parameterNameDelete=action.getParameter().get("parameterName");
 
+                ChatSessionParameter parameterDelete=parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(sessionId),
+                        ChatSessionParameterDao.Properties.ParameterName.eq(parameterNameDelete)).unique();
+
+                parameterDao.delete(parameterDelete);
+                sessionDao.detachAll();
+                break;
+            case "addSessionParameter":
+                String parameterNameAdd=action.getParameter().get("parameterName");
+                String parameterValueAdd=action.getParameter().get("parameterValue");
+                parameter=new ChatSessionParameter(null,sessionId,parameterNameAdd,parameterValueAdd);
+                parameterDao.insertOrReplace(parameter);
+
+                sessionDao.detachAll();
                 break;
         }
         return true;

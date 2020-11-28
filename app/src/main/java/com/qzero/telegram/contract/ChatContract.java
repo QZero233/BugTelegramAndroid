@@ -21,6 +21,8 @@ public class ChatContract {
 
         void registerMessageBroadcastListener();
         void unregisterMessageBroadcastListener();
+
+        String getSessionName();
     }
 
     public interface View extends IBaseView{

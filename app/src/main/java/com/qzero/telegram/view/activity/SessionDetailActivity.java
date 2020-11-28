@@ -137,8 +137,7 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
 
     private void submitUpdates(){
         String sessionName=et_session_name.getText().toString();
-        session.setSessionName(sessionName);
-        presenter.submitUpdates(session);
+        presenter.updateSessionName(sessionName);
     }
 
     private void quitSession(){
@@ -251,8 +250,9 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     @Override
     public void loadSessionInfo(ChatSession session) {
         this.session=session;
-        tv_session_name.setText(session.getSessionName());
-        et_session_name.setText(session.getSessionName());
+        String sessionName=presenter.getSessionName();
+        tv_session_name.setText(sessionName);
+        et_session_name.setText(sessionName);
 
         List<ChatMember> memberList=session.getChatMembers();
         if(memberList!=null){

@@ -14,6 +14,9 @@ public class SessionContract {
         void unregisterSessionBroadcastReceiver();
 
         void createNewSession(String sessionName);
+
+        String getSessionName(String sessionId);
+        String getSessionType(String sessionId);
     }
 
     public interface View extends IBaseView {

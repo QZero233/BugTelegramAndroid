@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.qzero.telegram.contract.SessionContract;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.BroadcastModule;
@@ -18,6 +19,7 @@ import com.qzero.telegram.notice.bean.NoticeDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Observer;
@@ -67,7 +69,16 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
     @Override
     public void createNewSession(String sessionName) {
         getView().showProgress();
-        sessionModule.createSession(new ChatSession(null,sessionName,false))
+
+        ChatSession chatSession=new ChatSession();
+
+        List<ChatSessionParameter> parameterList=new ArrayList<>();
+        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_NAME,sessionName));
+        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_TYPE,ChatSessionParameter.SESSION_TYPE_NORMAL));
+        chatSession.setSessionParameters(parameterList);
+        chatSession.setChatMembers(new ArrayList<>());
+
+        sessionModule.createSession(chatSession)
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
@@ -99,4 +110,16 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
                     }
                 });
     }
+
+    @Override
+    public String getSessionName(String sessionId) {
+        return sessionModule.getSessionParameterLocally(sessionId,ChatSessionParameter.NAME_SESSION_NAME);
+    }
+
+    @Override
+    public String getSessionType(String sessionId) {
+        return sessionModule.getSessionParameterLocally(sessionId,ChatSessionParameter.NAME_SESSION_TYPE);
+    }
+
+
 }

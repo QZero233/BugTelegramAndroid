@@ -15,6 +15,7 @@ import org.greenrobot.greendao.DaoException;
 import com.qzero.telegram.dao.gen.DaoSession;
 import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
+import com.qzero.telegram.dao.gen.ChatSessionParameterDao;
 
 @Entity
 @ParameterObject(name = "ChatSession")
@@ -24,8 +25,8 @@ public class ChatSession {
     @Property(nameInDb = "sessionId")
     private String sessionId;
 
-    @Property(nameInDb = "sessionName")
-    private String sessionName;
+    @ToMany(referencedJoinProperty = "sessionId")
+    private List<ChatSessionParameter> sessionParameters;
 
     @ToMany(referencedJoinProperty = "sessionId")
     private List<ChatMember> chatMembers;
@@ -41,10 +42,9 @@ public class ChatSession {
     @Generated(hash = 1308162568)
     private transient ChatSessionDao myDao;
 
-    @Generated(hash = 430902840)
-    public ChatSession(String sessionId, String sessionName, boolean deleted) {
+    @Generated(hash = 1170711239)
+    public ChatSession(String sessionId, boolean deleted) {
         this.sessionId = sessionId;
-        this.sessionName = sessionName;
         this.deleted = deleted;
     }
 
@@ -60,20 +60,17 @@ public class ChatSession {
         this.sessionId = sessionId;
     }
 
-    public String getSessionName() {
-        return this.sessionName;
-    }
-
-    public void setSessionName(String sessionName) {
-        this.sessionName = sessionName;
-    }
-
     public boolean getDeleted() {
         return this.deleted;
     }
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    @Keep
+    public void setSessionParameters(List<ChatSessionParameter> sessionParameters) {
+        this.sessionParameters = sessionParameters;
     }
 
     @Keep
@@ -156,5 +153,34 @@ public class ChatSession {
     public void __setDaoSession(DaoSession daoSession) {
         this.daoSession = daoSession;
         myDao = daoSession != null ? daoSession.getChatSessionDao() : null;
+    }
+
+    /**
+     * To-many relationship, resolved on first access (and after reset).
+     * Changes to to-many relations are not persisted, make changes to the target entity.
+     */
+    @Generated(hash = 433470329)
+    public List<ChatSessionParameter> getSessionParameters() {
+        if (sessionParameters == null) {
+            final DaoSession daoSession = this.daoSession;
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            ChatSessionParameterDao targetDao = daoSession.getChatSessionParameterDao();
+            List<ChatSessionParameter> sessionParametersNew = targetDao
+                    ._queryChatSession_SessionParameters(sessionId);
+            synchronized (this) {
+                if (sessionParameters == null) {
+                    sessionParameters = sessionParametersNew;
+                }
+            }
+        }
+        return sessionParameters;
+    }
+
+    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
+    @Generated(hash = 769195259)
+    public synchronized void resetSessionParameters() {
+        sessionParameters = null;
     }
 }

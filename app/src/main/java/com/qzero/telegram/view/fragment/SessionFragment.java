@@ -63,6 +63,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
         EditText et_session_name=new EditText(getContext());
         builder.setView(et_session_name);
 
+        //TODO SET MORE PARAMETER
         builder.setMessage("请输入新会话的名称：");
         builder.setNegativeButton("取消",null)
                 .setPositiveButton("新建",(a,b) ->
@@ -114,7 +115,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
             public View getView(int position, View convertView, ViewGroup parent) {
                 ChatSession session=sessionList.get(position);
                 TextView tv_name=new TextView(getContext());
-                tv_name.setText(session.getSessionName());
+                tv_name.setText(presenter.getSessionName(session.getSessionId()));
                 tv_name.setTextSize(20);
                 tv_name.setTextColor(Color.BLUE);
 

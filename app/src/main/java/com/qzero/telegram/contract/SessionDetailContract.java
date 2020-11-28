@@ -20,10 +20,13 @@ public class SessionDetailContract {
 
         void deleteSessionRemotely();
         void deleteSessionLocally();
-        void submitUpdates(ChatSession session);
+
+        void updateSessionName(String newSessionName);
 
         void registerListener();
         void unregisterListener();
+
+        String getSessionName();
     }
 
     public interface View extends IBaseView {
