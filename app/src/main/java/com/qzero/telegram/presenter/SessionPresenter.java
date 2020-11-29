@@ -66,15 +66,4 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
             broadcastModule.unregisterAllReceivers();
     }
 
-    @Override
-    public String getSessionName(String sessionId) {
-        return sessionModule.getSessionParameterLocally(sessionId,ChatSessionParameter.NAME_SESSION_NAME);
-    }
-
-    @Override
-    public String getSessionType(String sessionId) {
-        return sessionModule.getSessionParameterLocally(sessionId,ChatSessionParameter.NAME_SESSION_TYPE);
-    }
-
-
 }

@@ -9,9 +9,15 @@ import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.Property;
 
 import java.util.List;
+import java.util.Map;
+
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.ToMany;
 import org.greenrobot.greendao.DaoException;
+import org.greenrobot.greendao.annotation.Transient;
+import org.greenrobot.greendao.query.Query;
+import org.greenrobot.greendao.query.QueryBuilder;
+
 import com.qzero.telegram.dao.gen.DaoSession;
 import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
@@ -66,6 +72,31 @@ public class ChatSession {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    @Keep
+    public String getSessionParameter(String parameterName){
+        if(daoSession==null){
+            if(sessionParameters==null)
+                return null;
+
+            for(ChatSessionParameter parameter:sessionParameters){
+                if(parameter.getParameterName().equals(parameterName))
+                    return parameter.getParameterValue();
+            }
+
+            return null;
+        }else{
+            ChatSessionParameterDao parameterDao=daoSession.getChatSessionParameterDao();
+            QueryBuilder queryBuilder =parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(sessionId),
+                    ChatSessionParameterDao.Properties.ParameterName.eq(parameterName));
+
+            if(queryBuilder.count()!=1)
+                return null;
+
+            ChatSessionParameter parameter= (ChatSessionParameter) queryBuilder.unique();
+            return parameter.getParameterValue();
+        }
     }
 
     @Keep

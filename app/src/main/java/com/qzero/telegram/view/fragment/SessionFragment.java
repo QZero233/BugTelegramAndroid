@@ -127,7 +127,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
             public View getView(int position, View convertView, ViewGroup parent) {
                 ChatSession session=sessionList.get(position);
                 TextView tv_name=new TextView(getContext());
-                tv_name.setText(presenter.getSessionName(session.getSessionId()));
+                tv_name.setText(session.getSessionParameter(ChatSessionParameter.NAME_SESSION_NAME));
                 tv_name.setTextSize(20);
                 tv_name.setTextColor(Color.BLUE);
 
@@ -146,6 +146,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
         ChatSession session=sessionList.get(position);
         Intent intent=new Intent(getContext(), ChatActivity.class);
         intent.putExtra("sessionId",session.getSessionId());
+        intent.putExtra("sessionType",session.getSessionParameter(ChatSessionParameter.NAME_SESSION_TYPE));
         startActivity(intent);
     }
 }

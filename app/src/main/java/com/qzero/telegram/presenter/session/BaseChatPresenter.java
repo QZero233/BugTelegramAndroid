@@ -1,4 +1,4 @@
-package com.qzero.telegram.presenter;
+package com.qzero.telegram.presenter.session;
 
 import android.content.Context;
 
@@ -18,6 +18,7 @@ import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.MessageModuleImpl;
 import com.qzero.telegram.module.impl.SessionModuleImpl;
 import com.qzero.telegram.notice.bean.NoticeDataType;
+import com.qzero.telegram.presenter.BasePresenter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ import java.util.List;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 
-public class ChatPresenter extends BasePresenter<ChatContract.View> implements ChatContract.Presenter {
+public class BaseChatPresenter extends BasePresenter<ChatContract.View> implements ChatContract.Presenter {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -43,24 +44,25 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
 
     private List<ChatMessage> messageList;
 
-    public ChatPresenter(String sessionId) {
+    public BaseChatPresenter(String sessionId) {
         this.sessionId = sessionId;
     }
 
     @Override
     public void attachView(@NonNull ChatContract.View mView) {
         super.attachView(mView);
-        context=mView.getContext();
+    }
+
+    @Override
+    public void loadSessionInfo(String sessionId) {
+        context=getView().getContext();
 
         sessionModule=new SessionModuleImpl(context);
         messageModule=new MessageModuleImpl(context);
         broadcastModule=new BroadcastModuleImpl(context);
 
-        sessionDao= SessionManager.getInstance(mView.getContext()).getSession().getChatSessionDao();
-    }
+        sessionDao= SessionManager.getInstance(getView().getContext()).getSession().getChatSessionDao();
 
-    @Override
-    public void loadSessionInfo(String sessionId) {
         ChatSession session=sessionDao.load(sessionId);
         if(session==null){
             log.error(String.format("Can not find session with id %s locally", sessionId));
@@ -162,34 +164,6 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
                 });
     }
 
-
-    //Do it in two-way session
-    /*@Override
-    public void markRead(String messageId) {
-        messageModule.updateMessageStatus(messageId,"read")
-                .subscribe(new Observer<ActionResult>() {
-                    @Override
-                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
-
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        log.error("Failed to mark message as read with messageId "+messageId,e);
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-    }*/
-
     @Override
     public void deleteMessage(String messageId, boolean isPhysical) {
         if(isPhysical){
@@ -234,7 +208,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
         broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_MESSAGE, (dataId, actionType) -> {
             if(!isViewAttached())
                 return;
-            loadMessageList(sessionId);
+            onNewMessageArrive(dataId);
         });
 
         broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION,((dataId, actionType) -> {
@@ -257,7 +231,7 @@ public class ChatPresenter extends BasePresenter<ChatContract.View> implements C
     }
 
     @Override
-    public String getSessionName() {
-        return sessionModule.getSessionParameterLocally(sessionId, ChatSessionParameter.NAME_SESSION_NAME);
+    public void onNewMessageArrive(String messageId) {
+        loadMessageList(sessionId);
     }
 }

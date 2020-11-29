@@ -12,9 +12,6 @@ public class SessionContract {
         void getSessionList();
         void registerSessionBroadcastReceiver();
         void unregisterSessionBroadcastReceiver();
-
-        String getSessionName(String sessionId);
-        String getSessionType(String sessionId);
     }
 
     public interface View extends IBaseView {

@@ -24,6 +24,7 @@ import com.qzero.telegram.R;
 import com.qzero.telegram.contract.SessionDetailContract;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.presenter.SessionDetailPresenter;
 import com.qzero.telegram.view.BaseActivity;
@@ -250,7 +251,7 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     @Override
     public void loadSessionInfo(ChatSession session) {
         this.session=session;
-        String sessionName=presenter.getSessionName();
+        String sessionName=session.getSessionParameter(ChatSessionParameter.NAME_SESSION_NAME);
         tv_session_name.setText(sessionName);
         et_session_name.setText(sessionName);
 

@@ -346,9 +346,4 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
     public void unregisterListener() {
         broadcastModule.unregisterAllReceivers();
     }
-
-    @Override
-    public String getSessionName() {
-        return sessionModule.getSessionParameterLocally(chatSession.getSessionId(),ChatSessionParameter.NAME_SESSION_NAME);
-    }
 }

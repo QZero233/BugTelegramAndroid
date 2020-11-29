@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -30,13 +29,14 @@ import com.jakewharton.rxbinding4.widget.RxAdapterView;
 import com.qzero.telegram.R;
 import com.qzero.telegram.contract.ChatContract;
 import com.qzero.telegram.dao.LocalDataStorage;
-import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMessage;
 import com.qzero.telegram.dao.entity.ChatSession;
-import com.qzero.telegram.dao.gen.ChatSessionDao;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.impl.LocalDataStorageImpl;
 import com.qzero.telegram.http.bean.Token;
-import com.qzero.telegram.presenter.ChatPresenter;
+import com.qzero.telegram.presenter.session.BaseChatPresenter;
+import com.qzero.telegram.presenter.session.NormalSessionChatPresenter;
+import com.qzero.telegram.presenter.session.PersonalChatPresenter;
 import com.qzero.telegram.utils.TimeUtils;
 import com.qzero.telegram.view.BaseActivity;
 
@@ -65,6 +65,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     private List<ChatMessage> messageList;
 
     private String sessionId;
+    private String sessionType;
+
     private String myName;
 
     private boolean firstShowMessageList = true;
@@ -79,8 +81,21 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         ButterKnife.bind(this);
 
         sessionId = getIntent().getStringExtra("sessionId");
+        sessionType=getIntent().getStringExtra("sessionType");
 
-        presenter = new ChatPresenter(sessionId);
+        switch (sessionType){
+            case ChatSessionParameter.SESSION_TYPE_NORMAL:
+                presenter=new NormalSessionChatPresenter(sessionId);
+                break;
+            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
+                presenter=new PersonalChatPresenter(sessionId);
+                break;
+            default:
+                showToast("暂时不支持该类型的会话");
+                exit();
+                return;
+        }
+
         presenter.attachView(this);
 
         presenter.loadSessionInfo(sessionId);
@@ -112,6 +127,18 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         super.onDestroy();
         presenter.unregisterMessageBroadcastListener();
         presenter.detachView();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        presenter.detachView();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        presenter.attachView(this);
     }
 
     @Override
@@ -275,7 +302,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void loadSessionInfo(ChatSession session) {
         sessionDeleted=session.isDeleted();
-        setTitle(presenter.getSessionName());
+        setTitle(session.getSessionParameter(ChatSessionParameter.NAME_SESSION_NAME));
     }
 
     private void showDeleteConfirmDialog(String messageId, boolean isPhysical) {

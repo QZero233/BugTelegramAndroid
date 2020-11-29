@@ -14,7 +14,6 @@ public class ChatContract {
 
         void loadMessageList(String sessionId);
         void sendMessage(String senderName,byte[] content);
-        //void markRead(String messageId);
 
         void updateMessageStatus(String messageId,String newStatus);
         void deleteMessage(String messageId,boolean isPhysical);
@@ -22,7 +21,7 @@ public class ChatContract {
         void registerMessageBroadcastListener();
         void unregisterMessageBroadcastListener();
 
-        String getSessionName();
+        void onNewMessageArrive(String messageId);
     }
 
     public interface View extends IBaseView{

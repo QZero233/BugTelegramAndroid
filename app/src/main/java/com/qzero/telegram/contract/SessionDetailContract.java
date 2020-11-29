@@ -25,8 +25,6 @@ public class SessionDetailContract {
 
         void registerListener();
         void unregisterListener();
-
-        String getSessionName();
     }
 
     public interface View extends IBaseView {
