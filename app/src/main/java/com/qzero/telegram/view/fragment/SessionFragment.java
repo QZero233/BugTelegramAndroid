@@ -9,9 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,9 +21,11 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jakewharton.rxbinding4.view.RxView;
+import com.qzero.telegram.InputSessionInfoActivity;
 import com.qzero.telegram.R;
 import com.qzero.telegram.contract.SessionContract;
 import com.qzero.telegram.dao.entity.ChatSession;
+import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.presenter.SessionPresenter;
 import com.qzero.telegram.view.BaseFragment;
 import com.qzero.telegram.view.activity.ChatActivity;
@@ -60,14 +64,22 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
     private void showAddDialog(){
         AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
 
-        EditText et_session_name=new EditText(getContext());
-        builder.setView(et_session_name);
+        String[] sessionTypesToShow=new String[]{"普通会话","加密通话","P2P会话"};
+        String[] sessionTypes=new String[]{ChatSessionParameter.SESSION_TYPE_NORMAL,ChatSessionParameter.SESSION_TYPE_SECRET,ChatSessionParameter.SESSION_TYPE_PERSONAL};
 
-        //TODO SET MORE PARAMETER
-        builder.setMessage("请输入新会话的名称：");
+        Spinner sp_type=new Spinner(getContext());
+        sp_type.setAdapter(new ArrayAdapter(getContext(),R.layout.view_personal_info_sp_tv,sessionTypesToShow));
+        builder.setView(sp_type);
+
+        builder.setMessage("请选择会话类型");
         builder.setNegativeButton("取消",null)
-                .setPositiveButton("新建",(a,b) ->
-                        {presenter.createNewSession(et_session_name.getText().toString());});
+                .setPositiveButton("GO",(a,b) ->
+                        {
+                            String type=sessionTypes[sp_type.getSelectedItemPosition()];
+                            Intent intent=new Intent(getContext(), InputSessionInfoActivity.class);
+                            intent.putExtra("sessionType",type);
+                            startActivity(intent);
+                        });
 
         builder.setCancelable(false).show();
     }

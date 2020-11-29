@@ -13,8 +13,6 @@ public class SessionContract {
         void registerSessionBroadcastReceiver();
         void unregisterSessionBroadcastReceiver();
 
-        void createNewSession(String sessionName);
-
         String getSessionName(String sessionId);
         String getSessionType(String sessionId);
     }

@@ -163,6 +163,20 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
+    public Observable<ActionResult> deleteSessionParameter(String sessionId, String parameterName) {
+        return sessionService.deleteSessionParameter(sessionId,parameterName)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+    }
+
+    @Override
+    public Observable<ActionResult> addSessionParameter(String sessionId, String parameterName, String parameterValue) {
+        return sessionService.addSessionParameter(sessionId,parameterName,parameterValue)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+    }
+
+    @Override
     public Observable<ActionResult> updateChatMemberLevel(ChatMember chatMember) {
         PackedObjectFactory objectFactory=new CommonPackedObjectFactory();
         PackedObject parameter=objectFactory.getParameter(context);

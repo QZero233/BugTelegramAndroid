@@ -67,51 +67,6 @@ public class SessionPresenter extends BasePresenter<SessionContract.View> implem
     }
 
     @Override
-    public void createNewSession(String sessionName) {
-        getView().showProgress();
-
-        ChatSession chatSession=new ChatSession();
-
-        List<ChatSessionParameter> parameterList=new ArrayList<>();
-        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_NAME,sessionName));
-        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_TYPE,ChatSessionParameter.SESSION_TYPE_NORMAL));
-        chatSession.setSessionParameters(parameterList);
-        chatSession.setChatMembers(new ArrayList<>());
-
-        sessionModule.createSession(chatSession)
-                .subscribe(new Observer<ActionResult>() {
-                    @Override
-                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
-                        if(isViewAttached()){
-                            getView().showToast("创建成功");
-                            getSessionList();
-                        }
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        log.error("Failed to create a new session",e);
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                            getView().showToast("创建失败");
-                        }
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
-                    }
-                });
-    }
-
-    @Override
     public String getSessionName(String sessionId) {
         return sessionModule.getSessionParameterLocally(sessionId,ChatSessionParameter.NAME_SESSION_NAME);
     }

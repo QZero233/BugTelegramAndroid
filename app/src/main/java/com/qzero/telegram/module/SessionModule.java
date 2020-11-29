@@ -26,6 +26,10 @@ public interface SessionModule {
 
     Observable<ActionResult> updateSessionParameter(String sessionId,String parameterName,String parameterValue);
 
+    Observable<ActionResult> deleteSessionParameter(String sessionId,String parameterName);
+
+    Observable<ActionResult> addSessionParameter(String sessionId,String parameterName,String parameterValue);
+
     Observable<ActionResult> updateChatMemberLevel(ChatMember chatMember);
 
     void deleteSessionPhysically(String sessionId);
