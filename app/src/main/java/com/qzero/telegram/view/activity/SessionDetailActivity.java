@@ -1,7 +1,6 @@
 package com.qzero.telegram.view.activity;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -25,8 +23,7 @@ import com.qzero.telegram.contract.SessionDetailContract;
 import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.dao.entity.ChatSessionParameter;
-import com.qzero.telegram.module.SessionModule;
-import com.qzero.telegram.presenter.SessionDetailPresenter;
+import com.qzero.telegram.presenter.session.BaseSessionDetailPresenter;
 import com.qzero.telegram.view.BaseActivity;
 
 import java.util.List;
@@ -69,7 +66,7 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
 
         ButterKnife.bind(this);
 
-        presenter=new SessionDetailPresenter();
+        presenter=new BaseSessionDetailPresenter();
         presenter.attachView(this);
 
         String sessionId=getIntent().getStringExtra("sessionId");
@@ -246,6 +243,17 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
         btn_quit.setVisibility(View.GONE);
         fb_add_member.setVisibility(View.GONE);
         isDeleted=true;
+    }
+
+    @Override
+    public void showNormalSessionMode() {
+
+    }
+
+    @Override
+    public void showPersonalSessionMode() {
+        fb_add_member.setVisibility(View.GONE);
+        lv_members.setVisibility(View.GONE);
     }
 
     @Override

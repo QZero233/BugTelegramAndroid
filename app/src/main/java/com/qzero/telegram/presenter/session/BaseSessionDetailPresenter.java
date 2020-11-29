@@ -1,4 +1,4 @@
-package com.qzero.telegram.presenter;
+package com.qzero.telegram.presenter.session;
 
 import androidx.annotation.NonNull;
 
@@ -17,6 +17,7 @@ import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.SessionModuleImpl;
 import com.qzero.telegram.notice.bean.NoticeDataType;
+import com.qzero.telegram.presenter.BasePresenter;
 import com.qzero.telegram.utils.LocalStorageUtils;
 
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import java.util.List;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 
-public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.View> implements SessionDetailContract.Presenter {
+public class BaseSessionDetailPresenter extends BasePresenter<SessionDetailContract.View> implements SessionDetailContract.Presenter {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -82,6 +83,20 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
             default:
                 getView().showNormalUserMode();
                 break;
+        }
+
+        String sessionType=chatSession.getSessionParameter(ChatSessionParameter.NAME_SESSION_TYPE);
+        switch (sessionType){
+            case ChatSessionParameter.SESSION_TYPE_NORMAL:
+                getView().showNormalSessionMode();
+                break;
+            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
+                getView().showPersonalSessionMode();
+                break;
+            default:
+                getView().showToast("未知会话类型");
+                getView().exit();
+                return;
         }
 
         getView().loadSessionInfo(chatSession);
@@ -324,7 +339,6 @@ public class SessionDetailPresenter extends BasePresenter<SessionDetailContract.
                     }
                 });
     }
-
 
     @Override
     public void registerListener() {

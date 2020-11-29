@@ -16,12 +16,12 @@ public class SessionDetailContract {
 
         String[] getFriendNames();
 
+        void updateSessionName(String newSessionName);
+
         void quitSession();
 
         void deleteSessionRemotely();
         void deleteSessionLocally();
-
-        void updateSessionName(String newSessionName);
 
         void registerListener();
         void unregisterListener();
@@ -32,6 +32,9 @@ public class SessionDetailContract {
         void showOperatorMode();
         void showOwnerMode();
         void showDeletedMode();
+
+        void showNormalSessionMode();
+        void showPersonalSessionMode();
 
         void loadSessionInfo(ChatSession session);
     }
