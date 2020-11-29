@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".InputSessionInfoActivity"></activity>
+        <activity android:name=".view.activity.InputSessionInfoActivity"></activity>
         <activity android:name=".view.activity.UserInfoDetailActivity" />
         <activity android:name=".view.activity.FriendListActivity" />
         <activity android:name=".view.activity.SessionDetailActivity" />

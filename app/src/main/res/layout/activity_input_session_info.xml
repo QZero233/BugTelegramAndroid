@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".InputSessionInfoActivity">
+    tools:context=".view.activity.InputSessionInfoActivity">
 
     <Button
         android:id="@+id/btn_submit"
@@ -35,5 +35,11 @@
                 android:layout_height="wrap_content"
                 android:hint="会话名称" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <Spinner
+            android:id="@+id/sp_dst_user"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

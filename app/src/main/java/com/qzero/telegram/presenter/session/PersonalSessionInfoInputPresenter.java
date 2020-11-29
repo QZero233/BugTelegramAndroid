@@ -1,40 +1,51 @@
 package com.qzero.telegram.presenter.session;
 
-import androidx.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.qzero.telegram.contract.InputSessionInfoContract;
+import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.http.bean.ActionResult;
-import com.qzero.telegram.module.SessionModule;
-import com.qzero.telegram.module.impl.SessionModuleImpl;
-import com.qzero.telegram.presenter.BasePresenter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 
-public class NormalSessionInputPresenter extends BasePresenter<InputSessionInfoContract.View> implements InputSessionInfoContract.Presenter {
+public class PersonalSessionInfoInputPresenter extends BaseSessionInfoInputPresenter implements InputSessionInfoContract.Presenter {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    private SessionModule sessionModule;
+    private String dstUserName=null;
 
     @Override
-    public void attachView(@NonNull InputSessionInfoContract.View mView) {
+    public void attachView(@androidx.annotation.NonNull InputSessionInfoContract.View mView) {
         super.attachView(mView);
-
-        sessionModule=new SessionModuleImpl(getView().getContext());
+        mView.showPersonalSessionInput();
     }
 
     @Override
     public void submit(List<ChatSessionParameter> parameterList) {
+        for(int i=0;i<parameterList.size();i++){
+            ChatSessionParameter parameter=parameterList.get(i);
+            if(parameter.getParameterName().equals("dstUserName")){
+                dstUserName=parameter.getParameterValue();
+                parameterList.remove(i);
+                break;
+            }
+        }
+
+        if(TextUtils.isEmpty(dstUserName)){
+            getView().showLocalErrorMessage("对方用户名不能为空");
+            return;
+        }
+
         if(parameterList==null){
             getView().showLocalErrorMessage("传参错误");
             return;
@@ -46,6 +57,9 @@ public class NormalSessionInputPresenter extends BasePresenter<InputSessionInfoC
 
         getView().showProgress();
         sessionModule.createSession(chatSession)
+                .flatMap(actionResult -> {
+                   return sessionModule.addChatMember(new ChatMember(actionResult.getMessage(),dstUserName,ChatMember.LEVEL_NORMAL));
+                })
                 .subscribe(new Observer<ActionResult>() {
                     @Override
                     public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
@@ -77,5 +91,4 @@ public class NormalSessionInputPresenter extends BasePresenter<InputSessionInfoC
                     }
                 });
     }
-
 }

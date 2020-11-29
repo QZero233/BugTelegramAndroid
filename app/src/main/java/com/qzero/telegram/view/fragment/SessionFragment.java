@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -21,7 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jakewharton.rxbinding4.view.RxView;
-import com.qzero.telegram.InputSessionInfoActivity;
+import com.qzero.telegram.view.activity.InputSessionInfoActivity;
 import com.qzero.telegram.R;
 import com.qzero.telegram.contract.SessionContract;
 import com.qzero.telegram.dao.entity.ChatSession;

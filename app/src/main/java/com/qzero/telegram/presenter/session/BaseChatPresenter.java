@@ -123,7 +123,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
                     @Override
                     public void onComplete() {
                         if(isViewAttached()){
-                            messageList.get(messageList.size()-1).setMessageStatus("unread");
+                            messageList.get(messageList.size()-1).setMessageStatus("empty");
                             getView().showMessageList(messageList);
                         }
                     }

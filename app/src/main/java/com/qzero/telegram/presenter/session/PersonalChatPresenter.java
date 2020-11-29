@@ -1,14 +1,9 @@
 package com.qzero.telegram.presenter.session;
 
-import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.MessageModule;
-import com.qzero.telegram.module.impl.MessageModuleImpl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
 
 public class PersonalChatPresenter extends BaseChatPresenter {
 
@@ -21,7 +16,7 @@ public class PersonalChatPresenter extends BaseChatPresenter {
     }
 
     public void markRead(String messageId) {
-        if(messageModule==null)
+        /*if(messageModule==null)
             messageModule=new MessageModuleImpl(getView().getContext());
         messageModule.updateMessageStatus(messageId,"read")
                 .subscribe(new Observer<ActionResult>() {
@@ -44,7 +39,12 @@ public class PersonalChatPresenter extends BaseChatPresenter {
                     public void onComplete() {
 
                     }
-                });
+                });*/
+
+        //FIXME
+        //这样会出事
+        //A标记已读，更新消息状态，B会收到更新通知，并调用该方法，标记已读
+        //然后A收到消息又会标记已读，陷入循环
     }
 
     @Override

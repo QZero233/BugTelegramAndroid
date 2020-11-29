@@ -10,10 +10,12 @@ public class InputSessionInfoContract {
 
     public interface Presenter extends IBasePresenter<View> {
         void submit(List<ChatSessionParameter> parameterList);
+        String[] getFriendNames();
     }
 
     public interface View extends IBaseView{
-        void addNormalTextInput(String parameterName,String hint);
+        void showNormalSessionInput();
+        void showPersonalSessionInput();
     }
 
 }
