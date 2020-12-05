@@ -10,18 +10,17 @@ import java.util.List;
 public class ChatContract {
 
     public interface Presenter extends IBasePresenter<View>{
-        void loadSessionInfo(String sessionId);
+        void initSessionInfo(String sessionId);
 
-        void loadMessageList(String sessionId);
-        void sendMessage(String senderName,byte[] content);
+        void loadMessageList();
+
+        void sendMessage(byte[] content);
 
         void updateMessageStatus(String messageId,String newStatus);
         void deleteMessage(String messageId,boolean isPhysical);
 
         void registerMessageBroadcastListener();
         void unregisterMessageBroadcastListener();
-
-        void onNewMessageArrive(String messageId);
     }
 
     public interface View extends IBaseView{

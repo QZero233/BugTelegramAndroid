@@ -1,24 +1,20 @@
 package com.qzero.telegram.presenter.session;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.qzero.telegram.contract.ChatContract;
 import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.ChatMessage;
 import com.qzero.telegram.dao.entity.ChatSession;
-import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.module.BroadcastModule;
 import com.qzero.telegram.module.MessageModule;
-import com.qzero.telegram.module.SessionModule;
 import com.qzero.telegram.module.impl.BroadcastModuleImpl;
 import com.qzero.telegram.module.impl.MessageModuleImpl;
-import com.qzero.telegram.module.impl.SessionModuleImpl;
 import com.qzero.telegram.notice.bean.NoticeDataType;
 import com.qzero.telegram.presenter.BasePresenter;
+import com.qzero.telegram.utils.LocalStorageUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,65 +28,37 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    private SessionModule sessionModule;
-    private MessageModule messageModule;
-    private BroadcastModule broadcastModule;
+    protected MessageModule messageModule;
+    protected BroadcastModule broadcastModule;
 
-    private ChatSessionDao sessionDao;
+    protected ChatSessionDao sessionDao;
 
-    private Context context;
+    protected ChatSession session;
 
-    private String sessionId;
+    protected String myName;
 
-    private List<ChatMessage> messageList;
-
-    public BaseChatPresenter(String sessionId) {
-        this.sessionId = sessionId;
-    }
+    protected List<ChatMessage> messageList;
 
     @Override
     public void attachView(@NonNull ChatContract.View mView) {
         super.attachView(mView);
+        myName=LocalStorageUtils.getLocalTokenUserName(getView().getContext());
     }
 
     @Override
-    public void loadSessionInfo(String sessionId) {
-        context=getView().getContext();
-
-        sessionModule=new SessionModuleImpl(context);
-        messageModule=new MessageModuleImpl(context);
-        broadcastModule=new BroadcastModuleImpl(context);
-
-        sessionDao= SessionManager.getInstance(getView().getContext()).getSession().getChatSessionDao();
-
-        ChatSession session=sessionDao.load(sessionId);
-        if(session==null){
-            log.error(String.format("Can not find session with id %s locally", sessionId));
-            getView().showToast("错误，本地会话信息不存在");
-            return;
-        }
-
-        if(session.isDeleted()){
-            getView().showDeletedMode();
-        }
-
-        getView().loadSessionInfo(session);
-    }
-
-    @Override
-    public void loadMessageList(String sessionId) {
-        messageList=messageModule.getAllMessagesBySessionIdLocally(sessionId);
+    public void loadMessageList() {
+        messageList=messageModule.getAllMessagesBySessionIdLocally(session.getSessionId());
         getView().showMessageList(messageList);
     }
 
     @Override
-    public void sendMessage(String senderName,byte[] content) {
+    public void sendMessage(byte[] content) {
         ChatMessage chatMessage=new ChatMessage();
         chatMessage.setMessageStatus("sending");
         chatMessage.setContent(content);
         chatMessage.setSendTime(System.currentTimeMillis());
-        chatMessage.setSessionId(sessionId);
-        chatMessage.setSenderUserName(senderName);
+        chatMessage.setSessionId(session.getSessionId());
+        chatMessage.setSenderUserName(myName);
 
         if(messageList!=null){
             messageList.add(chatMessage);
@@ -131,6 +99,27 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
     }
 
     @Override
+    public void initSessionInfo(String sessionId) {
+        messageModule=new MessageModuleImpl(getView().getContext());
+        broadcastModule=new BroadcastModuleImpl(getView().getContext());
+
+        sessionDao= SessionManager.getInstance(getView().getContext()).getSession().getChatSessionDao();
+
+        session=sessionDao.load(sessionId);
+        if(session==null){
+            log.error(String.format("Can not find session with id %s locally", sessionId));
+            getView().showToast("错误，本地会话信息不存在");
+            return;
+        }
+
+        if(session.isDeleted()){
+            getView().showDeletedMode();
+        }
+
+        getView().loadSessionInfo(session);
+    }
+
+    @Override
     public void updateMessageStatus(String messageId, String newStatus) {
         getView().showProgress();
         messageModule.updateMessageStatus(messageId,newStatus)
@@ -158,7 +147,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
                         log.debug(String.format("Updated message status to %s with id %s", newStatus,messageId));
                         if(isViewAttached()){
                             getView().hideProgress();
-                            loadMessageList(sessionId);
+                            loadMessageList();
                         }
                     }
                 });
@@ -168,7 +157,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
     public void deleteMessage(String messageId, boolean isPhysical) {
         if(isPhysical){
             messageModule.deleteMessageLocallyPhysically(messageId);
-            loadMessageList(sessionId);
+            loadMessageList();
         }else{
             getView().showProgress();
             messageModule.deleteMessage(messageId)
@@ -196,7 +185,6 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
                         public void onComplete() {
                             if(isViewAttached()){
                                 getView().hideProgress();
-                                //loadMessageList(sessionId);
                             }
                         }
                     });
@@ -208,7 +196,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
         broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_MESSAGE, (dataId, actionType) -> {
             if(!isViewAttached())
                 return;
-            onNewMessageArrive(dataId);
+            loadMessageList();
         });
 
         broadcastModule.registerReceiverForCertainData(NoticeDataType.TYPE_SESSION,((dataId, actionType) -> {
@@ -218,7 +206,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
             if(actionType== BroadcastModule.ActionType.ACTION_TYPE_DELETE){
                 getView().showDeletedMode();
             }else{
-                ChatSession session=sessionDao.load(sessionId);
+                session=sessionDao.load(session.getSessionId());
                 getView().loadSessionInfo(session);
             }
 
@@ -228,10 +216,5 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
     @Override
     public void unregisterMessageBroadcastListener() {
         broadcastModule.unregisterAllReceivers();
-    }
-
-    @Override
-    public void onNewMessageArrive(String messageId) {
-        loadMessageList(sessionId);
     }
 }

@@ -6,7 +6,8 @@ public interface BroadcastModule {
 
     enum ActionType{
         ACTION_TYPE_DELETE,
-        ACTION_TYPE_UPDATE_OR_INSERT,
+        ACTION_TYPE_UPDATE,
+        ACTION_TYPE_INSERT,
         ACTION_TYPE_UNKNOWN
     }
 

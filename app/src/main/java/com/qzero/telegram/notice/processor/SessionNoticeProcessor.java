@@ -79,7 +79,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
             case "newSession":
                 sessionModule.getSession(sessionId)
                         .subscribe(o-> {},e -> {log.error("Failed to sync session with id "+sessionId,e);},
-                                ()->{broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);});
+                                ()->{broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_INSERT);});
                 break;
             case "newMember":
                 String newMemberUserName=action.getParameter().get("memberUserName");
@@ -89,7 +89,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                     Observable<List<ChatMessage>> messageObservable= messageModule.getAllMessagesBySessionIdRemotely(sessionId);
                     Observable.zip(sessionObservable,messageObservable,(chatSession,message) -> {
                         addSystemNotice(sessionId,notice.getGenerateTime(), String.format("你已被 %s 邀请加入群聊", action.getOperator()));
-                        broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                        broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_INSERT);
                         return Observable.just(0);
                     }).subscribe(o -> {});
                 }else {
@@ -98,7 +98,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
 
                     sessionDao.detachAll();
 
-                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE);
 
                     addSystemNotice(sessionId,notice.getGenerateTime(), String.format("%s 已被 %s 邀请加入群聊", newMemberUserName ,action.getOperator()));
                 }
@@ -118,7 +118,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                     QueryBuilder queryBuilder=memberDao.queryBuilder();
                     queryBuilder.where(ChatMemberDao.Properties.UserName.eq(removeMemberUserName),ChatMemberDao.Properties.SessionId.eq(sessionId));
                     queryBuilder.buildDelete().executeDeleteWithoutDetachingEntities();
-                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE);
                     addSystemNotice(sessionId,notice.getGenerateTime(), String.format("%s 已被 %s 移出群聊", removeMemberUserName ,action.getOperator()));
                 }
 
@@ -134,7 +134,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
                 member.setLevel(newLevel);
                 memberDao.save(member);
 
-                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                broadcastModule.sendBroadcast(NoticeDataType.TYPE_SESSION,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE);
 
                 String level="普通用户";
                 switch (member.getLevel()){
@@ -203,6 +203,6 @@ public class SessionNoticeProcessor implements NoticeProcessor {
 
         messageModule.saveLocalSystemNotice(message);
 
-        broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,sessionId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+        broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,sessionId, BroadcastModule.ActionType.ACTION_TYPE_INSERT);
     }
 }

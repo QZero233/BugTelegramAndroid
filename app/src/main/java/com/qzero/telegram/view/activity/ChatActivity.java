@@ -14,10 +14,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -39,6 +41,8 @@ import com.qzero.telegram.presenter.session.NormalSessionChatPresenter;
 import com.qzero.telegram.presenter.session.PersonalChatPresenter;
 import com.qzero.telegram.utils.TimeUtils;
 import com.qzero.telegram.view.BaseActivity;
+import com.qzero.telegram.view.adapter.ChatMessageNormalAdapter;
+import com.qzero.telegram.view.adapter.ChatMessagePersonalAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +71,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     private String sessionId;
     private String sessionType;
 
-    private String myName;
-
     private boolean firstShowMessageList = true;
 
     private boolean sessionDeleted=false;
@@ -80,15 +82,15 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
         ButterKnife.bind(this);
 
-        sessionId = getIntent().getStringExtra("sessionId");
+        sessionId=getIntent().getStringExtra("sessionId");
         sessionType=getIntent().getStringExtra("sessionType");
 
         switch (sessionType){
             case ChatSessionParameter.SESSION_TYPE_NORMAL:
-                presenter=new NormalSessionChatPresenter(sessionId);
+                presenter=new NormalSessionChatPresenter();
                 break;
             case ChatSessionParameter.SESSION_TYPE_PERSONAL:
-                presenter=new PersonalChatPresenter(sessionId);
+                presenter=new PersonalChatPresenter();
                 break;
             default:
                 showToast("暂时不支持该类型的会话");
@@ -98,24 +100,17 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
         presenter.attachView(this);
 
-        presenter.loadSessionInfo(sessionId);
+        presenter.initSessionInfo(sessionId);
 
-        presenter.loadMessageList(sessionId);
+        presenter.loadMessageList();
         presenter.registerMessageBroadcastListener();
 
         lv_messages.setClickable(false);
 
-        try {
-            Token token = new LocalDataStorageImpl(getContext()).getObject(LocalDataStorage.NAME_LOCAL_TOKEN, Token.class);
-            myName = token.getOwnerUserName();
-        } catch (IOException e) {
-            log.error("Failed to get token", e);
-        }
-
         RxView.clicks(btn_send)
                 .subscribe(o -> {
                     String message = et_content.getText().toString();
-                    presenter.sendMessage(myName, message.getBytes());
+                    presenter.sendMessage(message.getBytes());
                 });
 
         RxAdapterView.itemLongClicks(lv_messages)
@@ -161,125 +156,23 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
     @Override
     public void showMessageList(List<ChatMessage> messageList) {
-
         int position = lv_messages.getFirstVisiblePosition();
         View view = lv_messages.getChildAt(0);
         int top = view == null ? 0 : view.getTop();
 
         this.messageList = messageList;
-        lv_messages.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                if (messageList == null)
-                    return 0;
-                return messageList.size();
-            }
 
-            @Override
-            public Object getItem(int position) {
-                return null;
-            }
+        ListAdapter adapter=null;
+        switch (sessionType){
+            case ChatSessionParameter.SESSION_TYPE_NORMAL:
+                adapter=new ChatMessageNormalAdapter(messageList,getContext());
+                break;
+            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
+                adapter=new ChatMessagePersonalAdapter(messageList,getContext());
+                break;
+        }
 
-            @Override
-            public long getItemId(int position) {
-                return 0;
-            }
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                ChatMessage message = messageList.get(position);
-
-                if (message.getMessageType() != null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)) {
-                    //System notice, treat it specially
-                    View v = View.inflate(getContext(), R.layout.view_chat_message_system, null);
-
-                    TextView tv_system_notice = v.findViewById(R.id.tv_system_notice);
-                    tv_system_notice.setText(new String(message.getContent()));
-
-                    return v;
-                }
-
-                /*if (!message.getSenderUserName().equals(myName) && message.getMessageStatus().equals("unread")) {
-                    presenter.markRead(message.getMessageId());
-                }*/
-
-                View v = View.inflate(getContext(), R.layout.view_chat_message, null);
-
-                TextView tv_msg = v.findViewById(R.id.tv_msg);
-                TextView tv_time = v.findViewById(R.id.tv_time);
-                TextView tv_status = v.findViewById(R.id.tv_status);
-                TextView tv_sender = v.findViewById(R.id.tv_sender);
-
-                tv_time.setText(TimeUtils.toStandardTime(message.getSendTime()));
-                tv_status.setText(message.getMessageStatus());
-                tv_sender.setText(message.getSenderUserName() + " :");
-
-                if(message.getMessageStatus()==null){
-                    tv_status.setVisibility(View.GONE);
-                }else{
-                    switch (message.getMessageStatus().toLowerCase()) {
-                        case "read":
-                            tv_status.setText("已读");
-                            tv_status.setTextColor(Color.GREEN);
-                            break;
-                        case "unread":
-                            tv_status.setText("未读");
-                            tv_status.setTextColor(Color.CYAN);
-                            break;
-                        case "urge":
-                            tv_status.setText("紧急");
-                            tv_status.setTextColor(Color.RED);
-                            break;
-                        case "useless":
-                            tv_status.setText("无用");
-                            tv_status.setTextColor(Color.DKGRAY);
-                            break;
-                        case ChatMessage.STATUS_DELETED:
-                            tv_status.setText("已删除");
-
-                            tv_status.setTextColor(Color.GRAY);
-                            tv_status.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
-                            tv_status.setVisibility(View.VISIBLE);
-
-                            tv_msg.setTextColor(Color.GRAY);
-                            tv_msg.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
-
-                            tv_time.setTextColor(Color.GRAY);
-                            tv_time.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
-
-                            tv_sender.setTextColor(Color.GRAY);
-                            tv_sender.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
-
-                            break;
-                        case "empty":
-                            tv_status.setVisibility(View.GONE);
-                            break;
-                        default:
-                            tv_status.setTextColor(Color.BLUE);
-                            tv_status.setText(message.getMessageStatus());
-                            break;
-                    }
-                }
-
-
-                if (myName.equals(message.getSenderUserName())) {
-                    //Send by me
-                    tv_msg.setGravity(Gravity.RIGHT);
-                    tv_status.setGravity(Gravity.RIGHT);
-                    tv_time.setGravity(Gravity.RIGHT);
-
-                    tv_sender.setVisibility(View.GONE);
-                }
-
-
-                if (message != null && message.getContent() != null) {
-                    tv_msg.setText(new String(message.getContent()));
-                }
-
-
-                return v;
-            }
-        });
+        lv_messages.setAdapter(adapter);
 
         if (!firstShowMessageList)
             lv_messages.setSelectionFromTop(position, top);

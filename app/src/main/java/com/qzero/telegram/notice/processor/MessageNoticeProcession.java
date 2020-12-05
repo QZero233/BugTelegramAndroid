@@ -72,7 +72,7 @@ public class MessageNoticeProcession implements NoticeProcessor {
 
                             @Override
                             public void onComplete() {
-                                broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,messageId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                                broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,messageId, BroadcastModule.ActionType.ACTION_TYPE_INSERT);
                             }
                         });
                 break;
@@ -85,7 +85,7 @@ public class MessageNoticeProcession implements NoticeProcessor {
                 ChatMessage message=messageDao.load(messageId);
                 if(message!=null){
                     message.setMessageStatus(newStatus);
-                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,messageId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE_OR_INSERT);
+                    broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,messageId, BroadcastModule.ActionType.ACTION_TYPE_UPDATE);
                 }
                 break;
         }
