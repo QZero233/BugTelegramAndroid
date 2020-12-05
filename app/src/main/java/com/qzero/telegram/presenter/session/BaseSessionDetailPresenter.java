@@ -69,35 +69,10 @@ public class BaseSessionDetailPresenter extends BasePresenter<SessionDetailContr
         String currentUserName= LocalStorageUtils.getLocalTokenUserName(getView().getContext());
         ChatMember member=memberDao.queryBuilder().where(ChatMemberDao.Properties.UserName.eq(currentUserName),
                 ChatMemberDao.Properties.SessionId.eq(sessionId)).uniqueOrThrow();
-
-        switch (member.getLevel()){
-            case ChatMember.LEVEL_NORMAL:
-                getView().showNormalUserMode();
-                break;
-            case ChatMember.LEVEL_OPERATOR:
-                getView().showOperatorMode();
-                break;
-            case ChatMember.LEVEL_OWNER:
-                getView().showOwnerMode();
-                break;
-            default:
-                getView().showNormalUserMode();
-                break;
-        }
+        getView().adjustUserRole(member.getLevel());
 
         String sessionType=chatSession.getSessionParameter(ChatSessionParameter.NAME_SESSION_TYPE);
-        switch (sessionType){
-            case ChatSessionParameter.SESSION_TYPE_NORMAL:
-                getView().showNormalSessionMode();
-                break;
-            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
-                getView().showPersonalSessionMode();
-                break;
-            default:
-                getView().showToast("未知会话类型");
-                getView().exit();
-                return;
-        }
+        getView().adjustSessionType(sessionType);
 
         getView().loadSessionInfo(chatSession);
     }

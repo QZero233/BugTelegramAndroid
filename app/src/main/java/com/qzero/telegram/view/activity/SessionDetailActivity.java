@@ -214,28 +214,6 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     }
 
     @Override
-    public void showNormalUserMode() {
-        til_session_name.setVisibility(View.GONE);
-        btn_delete.setVisibility(View.GONE);
-        btn_submit.setVisibility(View.GONE);
-        fb_add_member.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void showOperatorMode() {
-        tv_session_name.setVisibility(View.GONE);
-        btn_delete.setVisibility(View.GONE);
-        isOperator=true;
-    }
-
-    @Override
-    public void showOwnerMode() {
-        tv_session_name.setVisibility(View.GONE);
-        btn_quit.setVisibility(View.GONE);
-        isOperator=true;
-    }
-
-    @Override
     public void showDeletedMode() {
         til_session_name.setVisibility(View.GONE);
         btn_delete.setVisibility(View.VISIBLE);
@@ -246,14 +224,47 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
     }
 
     @Override
-    public void showNormalSessionMode() {
-
+    public void adjustUserRole(int level) {
+        switch (level){
+            case ChatMember.LEVEL_NORMAL:
+                til_session_name.setVisibility(View.GONE);
+                btn_delete.setVisibility(View.GONE);
+                btn_submit.setVisibility(View.GONE);
+                fb_add_member.setVisibility(View.GONE);
+                break;
+            case ChatMember.LEVEL_OPERATOR:
+                tv_session_name.setVisibility(View.GONE);
+                btn_delete.setVisibility(View.GONE);
+                isOperator=true;
+                break;
+            case ChatMember.LEVEL_OWNER:
+                tv_session_name.setVisibility(View.GONE);
+                btn_quit.setVisibility(View.GONE);
+                isOperator=true;
+                break;
+            default:
+                til_session_name.setVisibility(View.GONE);
+                btn_delete.setVisibility(View.GONE);
+                btn_submit.setVisibility(View.GONE);
+                fb_add_member.setVisibility(View.GONE);
+                break;
+        }
     }
 
     @Override
-    public void showPersonalSessionMode() {
-        fb_add_member.setVisibility(View.GONE);
-        lv_members.setVisibility(View.GONE);
+    public void adjustSessionType(String sessionType) {
+        switch (sessionType){
+            case ChatSessionParameter.SESSION_TYPE_NORMAL:
+                break;
+            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
+                fb_add_member.setVisibility(View.GONE);
+                lv_members.setVisibility(View.GONE);
+                break;
+            default:
+                showToast("未知会话类型");
+                exit();
+                return;
+        }
     }
 
     @Override

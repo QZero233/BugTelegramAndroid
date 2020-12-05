@@ -28,13 +28,10 @@ public class SessionDetailContract {
     }
 
     public interface View extends IBaseView {
-        void showNormalUserMode();
-        void showOperatorMode();
-        void showOwnerMode();
-        void showDeletedMode();
+        void adjustUserRole(int level);
+        void adjustSessionType(String sessionMode);
 
-        void showNormalSessionMode();
-        void showPersonalSessionMode();
+        void showDeletedMode();
 
         void loadSessionInfo(ChatSession session);
     }
