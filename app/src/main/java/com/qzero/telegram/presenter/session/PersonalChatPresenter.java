@@ -118,7 +118,7 @@ public class PersonalChatPresenter extends BaseChatPresenter {
                 return;
 
             ChatMessage message=messageDao.load(dataId);
-            if(message.getSessionId().equals(session.getSessionId()) && message.getMessageId()!=null && !message.getSenderUserName().equals(myName)){
+            if(message.getSessionId().equals(session.getSessionId()) && !message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE) && !message.getSenderUserName().equals(myName)){
                 //Which means the message was sent by the partner
                 log.debug("Received message from partner,try to mark read");
                 markRead(dataId);

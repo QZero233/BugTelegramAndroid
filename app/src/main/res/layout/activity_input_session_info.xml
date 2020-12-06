@@ -36,6 +36,20 @@
                 android:hint="会话名称" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tll_key"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_session_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="会话密钥"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <Spinner
             android:id="@+id/sp_dst_user"
             android:visibility="gone"

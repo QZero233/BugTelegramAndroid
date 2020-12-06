@@ -258,7 +258,9 @@ public class SessionDetailActivity extends BaseActivity implements SessionDetail
                 break;
             case ChatSessionParameter.SESSION_TYPE_PERSONAL:
                 fb_add_member.setVisibility(View.GONE);
-                lv_members.setVisibility(View.GONE);
+                lv_members.setEnabled(false);
+                break;
+            case ChatSessionParameter.SESSION_TYPE_SECRET:
                 break;
             default:
                 showToast("未知会话类型");

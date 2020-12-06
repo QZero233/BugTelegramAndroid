@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.Menu;
@@ -19,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -39,6 +42,7 @@ import com.qzero.telegram.http.bean.Token;
 import com.qzero.telegram.presenter.session.BaseChatPresenter;
 import com.qzero.telegram.presenter.session.NormalSessionChatPresenter;
 import com.qzero.telegram.presenter.session.PersonalChatPresenter;
+import com.qzero.telegram.presenter.session.SecretSessionChatPresenter;
 import com.qzero.telegram.utils.TimeUtils;
 import com.qzero.telegram.view.BaseActivity;
 import com.qzero.telegram.view.adapter.ChatMessageNormalAdapter;
@@ -92,6 +96,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             case ChatSessionParameter.SESSION_TYPE_PERSONAL:
                 presenter=new PersonalChatPresenter();
                 break;
+            case ChatSessionParameter.SESSION_TYPE_SECRET:
+                presenter=new SecretSessionChatPresenter();
+                break;
             default:
                 showToast("暂时不支持该类型的会话");
                 exit();
@@ -99,11 +106,30 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         }
 
         presenter.attachView(this);
-
         presenter.initSessionInfo(sessionId);
-
-        presenter.loadMessageList();
         presenter.registerMessageBroadcastListener();
+
+        if (sessionType.equals(ChatSessionParameter.SESSION_TYPE_SECRET)) {
+            EditText et_key=new EditText(getContext());
+            et_key.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+            AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+
+            builder.setView(et_key);
+            builder.setMessage("请输入该会话的密码");
+            builder.setNegativeButton("取消", (dialog, which) -> {
+                exit();
+            });
+            builder.setPositiveButton("确认",(dialog, which) -> {
+                String clearKey=et_key.getText().toString();
+                ((SecretSessionChatPresenter)presenter).setClearKey(clearKey);
+            });
+            builder.setCancelable(false);
+            builder.show();
+        }else{
+            presenter.loadMessageList();
+        }
+
 
         lv_messages.setClickable(false);
 
@@ -170,6 +196,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             case ChatSessionParameter.SESSION_TYPE_PERSONAL:
                 adapter=new ChatMessagePersonalAdapter(messageList,getContext());
                 break;
+            case ChatSessionParameter.SESSION_TYPE_SECRET:
+                adapter=new ChatMessageNormalAdapter(messageList,getContext());
+                break;
         }
 
         lv_messages.setAdapter(adapter);
@@ -196,6 +225,18 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     public void loadSessionInfo(ChatSession session) {
         sessionDeleted=session.isDeleted();
         setTitle(session.getSessionParameter(ChatSessionParameter.NAME_SESSION_NAME));
+        switch (sessionType){
+            case ChatSessionParameter.SESSION_TYPE_NORMAL:
+                setTitle(getTitle()+"(普通群聊)");
+                break;
+            case ChatSessionParameter.SESSION_TYPE_PERSONAL:
+                setTitle(getTitle()+"(P2P对话)");
+                break;
+            case ChatSessionParameter.SESSION_TYPE_SECRET:
+                setTitle(getTitle()+"(加密通话)");
+                break;
+        }
+
     }
 
     private void showDeleteConfirmDialog(String messageId, boolean isPhysical) {

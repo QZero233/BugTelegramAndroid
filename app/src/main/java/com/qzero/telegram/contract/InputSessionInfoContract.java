@@ -14,8 +14,7 @@ public class InputSessionInfoContract {
     }
 
     public interface View extends IBaseView{
-        void showNormalSessionInput();
-        void showPersonalSessionInput();
+
     }
 
 }

@@ -23,54 +23,9 @@ public class NormalSessionInfoInputPresenter extends BaseSessionInfoInputPresent
     private Logger log= LoggerFactory.getLogger(getClass());
 
     @Override
-    public void attachView(@NonNull InputSessionInfoContract.View mView) {
-        super.attachView(mView);
-        mView.showNormalSessionInput();
-    }
-
-    @Override
     public void submit(List<ChatSessionParameter> parameterList) {
-        if(parameterList==null){
-            getView().showLocalErrorMessage("传参错误");
-            return;
-        }
-
-        ChatSession chatSession=new ChatSession();
-        chatSession.setSessionParameters(parameterList);
-        chatSession.setChatMembers(new ArrayList<>());
-
-        getView().showProgress();
-        sessionModule.createSession(chatSession)
-                .subscribe(new Observer<ActionResult>() {
-                    @Override
-                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
-                        if(isViewAttached()){
-                            getView().showToast("创建成功");
-                            getView().exit();
-                        }
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        log.error("Failed to create a new session",e);
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                            getView().showToast("创建失败");
-                        }
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
-                    }
-                });
+        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_TYPE,ChatSessionParameter.SESSION_TYPE_NORMAL));
+        super.submit(parameterList);
     }
 
 }

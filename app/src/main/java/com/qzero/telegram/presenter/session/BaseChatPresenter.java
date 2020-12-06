@@ -60,10 +60,7 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
         chatMessage.setSessionId(session.getSessionId());
         chatMessage.setSenderUserName(myName);
 
-        if(messageList!=null){
-            messageList.add(chatMessage);
-            getView().showMessageList(messageList);
-        }
+        loadMessageList();
 
         chatMessage.setMessageStatus("empty");
 

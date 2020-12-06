@@ -24,13 +24,12 @@ public class PersonalSessionInfoInputPresenter extends BaseSessionInfoInputPrese
     private String dstUserName=null;
 
     @Override
-    public void attachView(@androidx.annotation.NonNull InputSessionInfoContract.View mView) {
-        super.attachView(mView);
-        mView.showPersonalSessionInput();
-    }
-
-    @Override
     public void submit(List<ChatSessionParameter> parameterList) {
+        if(parameterList==null){
+            getView().showLocalErrorMessage("传参错误");
+            return;
+        }
+
         for(int i=0;i<parameterList.size();i++){
             ChatSessionParameter parameter=parameterList.get(i);
             if(parameter.getParameterName().equals("dstUserName")){
@@ -45,10 +44,9 @@ public class PersonalSessionInfoInputPresenter extends BaseSessionInfoInputPrese
             return;
         }
 
-        if(parameterList==null){
-            getView().showLocalErrorMessage("传参错误");
-            return;
-        }
+
+
+        parameterList.add(new ChatSessionParameter(null,null,ChatSessionParameter.NAME_SESSION_TYPE,ChatSessionParameter.SESSION_TYPE_PERSONAL));
 
         ChatSession chatSession=new ChatSession();
         chatSession.setSessionParameters(parameterList);
