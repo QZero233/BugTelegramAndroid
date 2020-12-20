@@ -5,6 +5,7 @@ import com.qzero.telegram.presenter.IBasePresenter;
 import com.qzero.telegram.view.IBaseView;
 
 import java.util.List;
+import java.util.Map;
 
 public class SessionContract {
 
@@ -15,7 +16,7 @@ public class SessionContract {
     }
 
     public interface View extends IBaseView {
-        void showSessionList(List<ChatSession> sessionList);
+        void showSessionList(List<ChatSession> sessionList, Map<String,Integer> freshMessageCountMap);
     }
 
 }

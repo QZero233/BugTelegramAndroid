@@ -209,6 +209,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             lv_messages.setSelection(lv_messages.getCount() - 1);
             firstShowMessageList = false;
         }
+
+        presenter.cleanAllFreshMark();
     }
 
     @Override
@@ -345,7 +347,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
                     if(status!=null && status.equals(ChatMessage.STATUS_DELETED))
                         physically=true;
 
-                    if(message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)){
+                    if(message.getMessageType()!=null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)){
                         physically=true;
                     }
 

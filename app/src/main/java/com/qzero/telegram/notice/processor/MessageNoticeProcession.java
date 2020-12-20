@@ -12,6 +12,7 @@ import com.qzero.telegram.module.impl.MessageModuleImpl;
 import com.qzero.telegram.notice.bean.DataNotice;
 import com.qzero.telegram.notice.bean.NoticeAction;
 import com.qzero.telegram.notice.bean.NoticeDataType;
+import com.qzero.telegram.utils.NotificationUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +33,16 @@ public class MessageNoticeProcession implements NoticeProcessor {
 
     private ChatMessageDao messageDao;
 
+    private NotificationUtils notificationUtils;
+
     public MessageNoticeProcession(Context context) {
         this.context = context;
         messageModule=new MessageModuleImpl(context);
         broadcastModule=new BroadcastModuleImpl(context);
 
         messageDao= SessionManager.getInstance(context).getSession().getChatMessageDao();
+
+        notificationUtils=NotificationUtils.getInstance(context);
     }
 
     @Override
@@ -73,6 +78,12 @@ public class MessageNoticeProcession implements NoticeProcessor {
                             @Override
                             public void onComplete() {
                                 broadcastModule.sendBroadcast(NoticeDataType.TYPE_MESSAGE,messageId, BroadcastModule.ActionType.ACTION_TYPE_INSERT);
+
+                                ChatMessage message=messageDao.load(messageId);
+                                message.setFreshMessage(true);
+                                messageDao.insertOrReplace(message);
+
+                                notificationUtils.sendMessageNotification(messageModule.getAllFreshMessageCount());
                             }
                         });
                 break;

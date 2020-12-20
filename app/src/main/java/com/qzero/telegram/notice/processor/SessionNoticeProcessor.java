@@ -198,7 +198,7 @@ public class SessionNoticeProcessor implements NoticeProcessor {
     }
 
     private void addSystemNotice(String sessionId,long time,String content){
-        ChatMessage message=new ChatMessage(UUIDUtils.getRandomUUID(),null,sessionId,time,null,ChatMessage.TYPE_SYSTEM_NOTICE);
+        ChatMessage message=new ChatMessage(UUIDUtils.getRandomUUID(),null,sessionId,time,null,ChatMessage.TYPE_SYSTEM_NOTICE,true);
         message.setContent(content.getBytes());
 
         messageModule.saveLocalSystemNotice(message);

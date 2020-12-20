@@ -44,18 +44,23 @@ public class ChatMessage {
     @Property(nameInDb = "messageType")
     private String messageType;
 
+    @Property(nameInDb = "freshMessage")
+    private boolean freshMessage;
+
     public ChatMessage() {
     }
 
-    @Generated(hash = 986747747)
+    @Generated(hash = 2146686208)
     public ChatMessage(String messageId, String senderUserName, String sessionId,
-            long sendTime, String messageStatus, String messageType) {
+            long sendTime, String messageStatus, String messageType,
+            boolean freshMessage) {
         this.messageId = messageId;
         this.senderUserName = senderUserName;
         this.sessionId = sessionId;
         this.sendTime = sendTime;
         this.messageStatus = messageStatus;
         this.messageType = messageType;
+        this.freshMessage = freshMessage;
     }
 
     public String getMessageId() {
@@ -124,5 +129,13 @@ public class ChatMessage {
 
     public void setMessageType(String messageType) {
         this.messageType = messageType;
+    }
+
+    public boolean getFreshMessage() {
+        return this.freshMessage;
+    }
+
+    public void setFreshMessage(boolean freshMessage) {
+        this.freshMessage = freshMessage;
     }
 }

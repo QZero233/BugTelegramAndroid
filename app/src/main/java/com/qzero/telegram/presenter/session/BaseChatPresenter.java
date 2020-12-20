@@ -117,6 +117,13 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
     }
 
     @Override
+    public void cleanAllFreshMark() {
+        if(session!=null){
+            messageModule.cleanAllFreshMark(session.getSessionId());
+        }
+    }
+
+    @Override
     public void updateMessageStatus(String messageId, String newStatus) {
         getView().showProgress();
         messageModule.updateMessageStatus(messageId,newStatus)

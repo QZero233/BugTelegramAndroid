@@ -14,6 +14,7 @@ import com.qzero.telegram.http.exchange.PackedObject;
 import com.qzero.telegram.http.service.DefaultTransformer;
 import com.qzero.telegram.http.service.UserInfoService;
 import com.qzero.telegram.module.UserInfoModule;
+import com.qzero.telegram.utils.LocalStorageUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,18 +41,18 @@ public class UserInfoModuleImpl implements UserInfoModule {
     }
 
     @Override
-    public Observable<ActionResult> updatePersonalInfo(UserInfo newUserInfo) {
-        PackedObject parameter = new CommonPackedObjectFactory().getParameter(context);
-        parameter.addObject(newUserInfo);
-
-        return service.updatePersonalInfo(parameter)
+    public Observable<ActionResult> updateAccountStatusAndMotto(int accountStatus,String motto) {
+        return service.updateAccountStatusAndMotto(accountStatus,motto)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject ->
                 {
                     ActionResult actionResult=packedObject.parseObject(ActionResult.class);
 
                     if(actionResult.isSucceeded()){
-                        userInfoDao.insertOrReplace(newUserInfo);
+                        UserInfo userInfo=userInfoDao.load(LocalStorageUtils.getLocalTokenUserName(context));
+                        userInfo.setAccountStatus(accountStatus);
+                        userInfo.setMotto(motto);
+                        userInfoDao.insertOrReplace(userInfo);
                     }
 
                     return Observable.just(actionResult);
@@ -76,6 +77,12 @@ public class UserInfoModuleImpl implements UserInfoModule {
             return remote;
         else
             return Observable.concat(Observable.just(localUserInfo),remote);
+    }
+
+    @Override
+    public UserInfo getUserInfoLocally(String userName) {
+        UserInfo localUserInfo=userInfoDao.queryBuilder().where(UserInfoDao.Properties.UserName.eq(userName)).unique();
+        return localUserInfo;
     }
 
     @Override

@@ -30,6 +30,7 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
         public final static Property SendTime = new Property(3, long.class, "sendTime", false, "sendTime");
         public final static Property MessageStatus = new Property(4, String.class, "messageStatus", false, "messageStatus");
         public final static Property MessageType = new Property(5, String.class, "messageType", false, "messageType");
+        public final static Property FreshMessage = new Property(6, boolean.class, "freshMessage", false, "freshMessage");
     }
 
 
@@ -50,7 +51,8 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
                 "\"sessionId\" TEXT," + // 2: sessionId
                 "\"sendTime\" INTEGER NOT NULL ," + // 3: sendTime
                 "\"messageStatus\" TEXT," + // 4: messageStatus
-                "\"messageType\" TEXT);"); // 5: messageType
+                "\"messageType\" TEXT," + // 5: messageType
+                "\"freshMessage\" INTEGER NOT NULL );"); // 6: freshMessage
     }
 
     /** Drops the underlying database table. */
@@ -88,6 +90,7 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
         if (messageType != null) {
             stmt.bindString(6, messageType);
         }
+        stmt.bindLong(7, entity.getFreshMessage() ? 1L: 0L);
     }
 
     @Override
@@ -119,6 +122,7 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
         if (messageType != null) {
             stmt.bindString(6, messageType);
         }
+        stmt.bindLong(7, entity.getFreshMessage() ? 1L: 0L);
     }
 
     @Override
@@ -134,7 +138,8 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // sessionId
             cursor.getLong(offset + 3), // sendTime
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // messageStatus
-            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // messageType
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // messageType
+            cursor.getShort(offset + 6) != 0 // freshMessage
         );
         return entity;
     }
@@ -147,6 +152,7 @@ public class ChatMessageDao extends AbstractDao<ChatMessage, String> {
         entity.setSendTime(cursor.getLong(offset + 3));
         entity.setMessageStatus(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setMessageType(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setFreshMessage(cursor.getShort(offset + 6) != 0);
      }
     
     @Override

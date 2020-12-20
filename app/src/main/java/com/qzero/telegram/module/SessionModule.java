@@ -35,7 +35,4 @@ public interface SessionModule {
     void deleteSessionPhysically(String sessionId);
 
     void deleteSessionLogically(String sessionId);
-
-    String getSessionParameterLocally(String sessionId,String parameterName);
-
 }

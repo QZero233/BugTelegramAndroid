@@ -212,16 +212,6 @@ public class SessionModuleImpl implements SessionModule {
     }
 
     @Override
-    public String getSessionParameterLocally(String sessionId, String parameterName) {
-        ChatSessionParameter parameter=parameterDao.queryBuilder().where(ChatSessionParameterDao.Properties.SessionId.eq(sessionId),
-                ChatSessionParameterDao.Properties.ParameterName.eq(parameterName)).unique();
-        if(parameter==null)
-            return null;
-
-        return parameter.getParameterValue();
-    }
-
-    @Override
     public void deleteSessionPhysically(String sessionId) {
         sessionDao.deleteByKey(sessionId);
         ChatMessageDao messageDao=SessionManager.getInstance(context).getSession().getChatMessageDao();

@@ -7,11 +7,12 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface UserInfoService {
 
-    @PUT("/account/user_info")
-    Observable<PackedObject> updatePersonalInfo(@Body PackedObject parameter);
+    @PUT("/account/user_info/account_status_and_motto")
+    Observable<PackedObject> updateAccountStatusAndMotto(@Query("account_status") int accountStatus,@Query("motto") String motto);
 
     @GET("/account/user_info/{user_name}")
     Observable<PackedObject> getOtherUserInfo(@Path("user_name")String userName);

@@ -28,13 +28,15 @@ import com.qzero.telegram.dao.entity.ChatSessionParameter;
 import com.qzero.telegram.presenter.SessionPresenter;
 import com.qzero.telegram.view.BaseFragment;
 import com.qzero.telegram.view.activity.ChatActivity;
+import com.qzero.telegram.view.activity.SessionDetailActivity;
 
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class SessionFragment extends BaseFragment implements SessionContract.View, AdapterView.OnItemClickListener {
+public class SessionFragment extends BaseFragment implements SessionContract.View, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
     @BindView(R.id.fb_add)
     public FloatingActionButton fb_add;
@@ -53,6 +55,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
         ButterKnife.bind(this,view);
 
         lv_sessions.setOnItemClickListener(this);
+        lv_sessions.setOnItemLongClickListener(this);
         presenter=new SessionPresenter();
 
         RxView.clicks(fb_add).subscribe(u->{showAddDialog();});
@@ -102,7 +105,7 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
     }
 
     @Override
-    public void showSessionList(List<ChatSession> sessionList) {
+    public void showSessionList(List<ChatSession> sessionList, Map<String,Integer> freshMessageCountMap) {
         this.sessionList=sessionList;
         lv_sessions.setAdapter(new BaseAdapter() {
             @Override
@@ -130,6 +133,14 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
                 tv_name.setTextSize(20);
                 tv_name.setTextColor(Color.BLUE);
 
+                if(freshMessageCountMap.containsKey(session.getSessionId())){
+                    int count=freshMessageCountMap.get(session.getSessionId());
+                    if(count!=0){
+                        tv_name.setTextColor(Color.RED);
+                        tv_name.setText(session.getSessionParameter(ChatSessionParameter.NAME_SESSION_NAME)+ String.format("(有 %d 条未读消息)", count));
+                    }
+                }
+
                 if(session.getDeleted()){
                     tv_name.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG|Paint.ANTI_ALIAS_FLAG);
                     tv_name.setTextColor(Color.GRAY);
@@ -147,5 +158,14 @@ public class SessionFragment extends BaseFragment implements SessionContract.Vie
         intent.putExtra("sessionId",session.getSessionId());
         intent.putExtra("sessionType",session.getSessionParameter(ChatSessionParameter.NAME_SESSION_TYPE));
         startActivity(intent);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        ChatSession session=sessionList.get(position);
+        Intent intent=new Intent(getContext(), SessionDetailActivity.class);
+        intent.putExtra("sessionId",session.getSessionId());
+        startActivity(intent);
+        return true;
     }
 }

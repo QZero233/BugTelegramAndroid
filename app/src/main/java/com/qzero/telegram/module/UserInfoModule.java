@@ -10,9 +10,11 @@ import io.reactivex.rxjava3.core.Observable;
 public interface UserInfoModule {
 
 
-    Observable<ActionResult> updatePersonalInfo(UserInfo newUserInfo);
+    Observable<ActionResult> updateAccountStatusAndMotto(int accountStatus,String motto);
 
     Observable<UserInfo> getUserInfo(String userName);
+
+    UserInfo getUserInfoLocally(String userName);
 
     Observable<UserInfo> getUserInfoFromOnlyRemote(String userName);
 

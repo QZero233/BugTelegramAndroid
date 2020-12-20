@@ -175,5 +175,29 @@ public class MessageModuleImpl implements MessageModule {
             log.error("Failed to save local system notice content");
         }
     }
+
+    @Override
+    public int getFreshMessageCount(String sessionId) {
+        return (int) messageDao.queryBuilder().where(ChatMessageDao.Properties.SessionId.eq(sessionId),ChatMessageDao.Properties.FreshMessage.eq(true)).count();
+    }
+
+    @Override
+    public void cleanAllFreshMark(String sessionId) {
+        List<ChatMessage> freshMessages=messageDao.queryBuilder().
+                where(ChatMessageDao.Properties.SessionId.eq(sessionId),ChatMessageDao.Properties.FreshMessage.eq(true)).list();
+        if(freshMessages!=null && !freshMessages.isEmpty()){
+            for(ChatMessage message:freshMessages){
+                message.setFreshMessage(false);
+                messageDao.insertOrReplace(message);
+            }
+        }
+    }
+
+    @Override
+    public int getAllFreshMessageCount() {
+        return (int) messageDao.queryBuilder().where(ChatMessageDao.Properties.FreshMessage.eq(true)).count();
+    }
+
+
 }
 

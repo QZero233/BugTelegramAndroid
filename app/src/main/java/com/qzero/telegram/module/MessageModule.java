@@ -29,4 +29,10 @@ public interface MessageModule {
 
     void saveLocalSystemNotice(ChatMessage message);
 
+    int getFreshMessageCount(String sessionId);
+
+    void cleanAllFreshMark(String sessionId);
+
+    int getAllFreshMessageCount();
+
 }
