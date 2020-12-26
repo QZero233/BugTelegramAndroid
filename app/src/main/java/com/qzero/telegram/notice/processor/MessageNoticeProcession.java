@@ -12,6 +12,7 @@ import com.qzero.telegram.module.impl.MessageModuleImpl;
 import com.qzero.telegram.notice.bean.DataNotice;
 import com.qzero.telegram.notice.bean.NoticeAction;
 import com.qzero.telegram.notice.bean.NoticeDataType;
+import com.qzero.telegram.utils.LocalStorageUtils;
 import com.qzero.telegram.utils.NotificationUtils;
 
 import org.slf4j.Logger;
@@ -35,6 +36,8 @@ public class MessageNoticeProcession implements NoticeProcessor {
 
     private NotificationUtils notificationUtils;
 
+    private String myName;
+
     public MessageNoticeProcession(Context context) {
         this.context = context;
         messageModule=new MessageModuleImpl(context);
@@ -43,6 +46,10 @@ public class MessageNoticeProcession implements NoticeProcessor {
         messageDao= SessionManager.getInstance(context).getSession().getChatMessageDao();
 
         notificationUtils=NotificationUtils.getInstance(context);
+
+        myName= LocalStorageUtils.getLocalTokenUserName(context);
+        if(myName==null)
+            myName="";
     }
 
     @Override
@@ -83,7 +90,8 @@ public class MessageNoticeProcession implements NoticeProcessor {
                                 message.setFreshMessage(true);
                                 messageDao.insertOrReplace(message);
 
-                                notificationUtils.sendMessageNotification(messageModule.getAllFreshMessageCount());
+                                if(!myName.equals(message.getSenderUserName()))
+                                    notificationUtils.sendMessageNotification(messageModule.getAllFreshMessageCount());
                             }
                         });
                 break;

@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -58,16 +59,16 @@ public class NotificationUtils extends ContextWrapper {
         return new Notification.Builder(getApplicationContext(), id)
                 .setContentTitle(title)
                 .setContentText(content)
-                //TODO ADD SMALL ICON AND LARGE ICON
-                //.setSmallIcon(R.drawable.)
-                //.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher))//TODO REPLACE MY OWN ICON
+                .setSmallIcon(R.drawable.notification_icon_small)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.icon_bt))
                 .setAutoCancel(true);
     }
 
     private Notification.Builder getNotification_25(String title, String content){
-        return new Notification.Builder(this).setTicker("123").
-                //setSmallIcon(R.mipmap.ic_launcher_bt).setLargeIcon( BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher))//TODO REPLACE MY OWN ICON
-                setContentText(content).setContentTitle(title);
+        return new Notification.Builder(this).setTicker("123")
+                .setSmallIcon(R.mipmap.icon_bt)
+                .setLargeIcon( BitmapFactory.decodeResource(getResources(),R.mipmap.icon_bt))
+                .setContentText(content).setContentTitle(title);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
