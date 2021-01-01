@@ -36,7 +36,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply plugin
 
 greendao{
-    schemaVersion 9
+    schemaVersion 11
     daoPackage "com.qzero.telegram.dao.gen"
     targetGenDir 'src/main/java'
 }
@@ -74,5 +74,6 @@ dependencies {
 
     //DrawerLayout
     implementation "androidx.drawerlayout:drawerlayout:1.1.0-alpha03"
+
 
 }

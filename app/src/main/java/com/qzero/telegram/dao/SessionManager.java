@@ -13,7 +13,10 @@ public class SessionManager {
 
     private static SessionManager instance;
 
-    private DaoMaster.DevOpenHelper devOpenHelper;
+    //private DaoMaster.DevOpenHelper devOpenHelper;
+    private DaoMaster.OpenHelper openHelper;
+
+
     private Database database;
     private DaoSession session;
 
@@ -33,8 +36,9 @@ public class SessionManager {
     }
 
     private void initDao(){
-        devOpenHelper=new DaoMaster.DevOpenHelper(context,"localDatabase");
-        database=devOpenHelper.getWritableDb();
+        //devOpenHelper=new DaoMaster.DevOpenHelper(context,"localDatabase");
+        openHelper=new MyOpenHelper(context,"localDatabase");
+        database=openHelper.getWritableDb();
         session=new DaoMaster(database).newSession();
     }
 
