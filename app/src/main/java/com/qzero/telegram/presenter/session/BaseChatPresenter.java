@@ -52,13 +52,14 @@ public class BaseChatPresenter extends BasePresenter<ChatContract.View> implemen
     }
 
     @Override
-    public void sendMessage(byte[] content) {
+    public void sendMessage(byte[] content,String messageType) {
         ChatMessage chatMessage=new ChatMessage();
         chatMessage.setMessageStatus("sending");
         chatMessage.setContent(content);
         chatMessage.setSendTime(System.currentTimeMillis());
         chatMessage.setSessionId(session.getSessionId());
         chatMessage.setSenderUserName(myName);
+        chatMessage.setMessageType(messageType);
 
         loadMessageList();
 

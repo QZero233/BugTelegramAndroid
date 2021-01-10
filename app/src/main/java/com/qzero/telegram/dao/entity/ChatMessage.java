@@ -17,6 +17,8 @@ public class ChatMessage {
     public static final String STATUS_DELETED="#deleted";
 
     public static final String TYPE_SYSTEM_NOTICE="systemNotice";
+    public static final String TYPE_TEXT_MESSAGE="textMessage";
+    public static final String TYPE_SYSTEM_IMAGE_MESSAGE="systemImageMessage";
 
     @Id
     @Property(nameInDb = "messageId")

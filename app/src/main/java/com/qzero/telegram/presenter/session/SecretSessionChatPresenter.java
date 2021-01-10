@@ -40,8 +40,8 @@ public class SecretSessionChatPresenter extends BaseChatPresenter {
     }
 
     @Override
-    public void sendMessage(byte[] content) {
+    public void sendMessage(byte[] content,String messageType) {
         content=AESUtils.aesEncrypt(content,clearKey);
-        super.sendMessage(content);
+        super.sendMessage(content,messageType);
     }
 }

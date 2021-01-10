@@ -49,6 +49,8 @@ public class ChatMessagePersonalAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ChatMessage message = messageList.get(position);
+        if(message.getMessageType()==null)
+            message.setMessageType(ChatMessage.TYPE_TEXT_MESSAGE);
 
         if (message.getMessageType() != null && message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_NOTICE)) {
             //System notice, treat it specially
@@ -58,6 +60,12 @@ public class ChatMessagePersonalAdapter extends BaseAdapter {
             tv_system_notice.setText(new String(message.getContent()));
 
             return v;
+        }else if(message.getMessageType().equals(ChatMessage.TYPE_SYSTEM_IMAGE_MESSAGE)){
+            //Image message
+
+            TextView tv=new TextView(context);
+            tv.setText("Image message is not ready");
+            return tv;
         }
 
         View v = View.inflate(context, R.layout.view_chat_message, null);

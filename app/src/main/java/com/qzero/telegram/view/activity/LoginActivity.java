@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 
 import com.jakewharton.rxbinding4.view.RxView;
 import com.jakewharton.rxbinding4.widget.RxTextView;
+import com.qzero.telegram.MainActivity;
 import com.qzero.telegram.R;
 import com.qzero.telegram.contract.LoginContract;
 import com.qzero.telegram.presenter.LoginPresenter;
@@ -84,6 +85,6 @@ public class LoginActivity extends BaseActivity implements LoginContract.View {
 
     @Override
     public void jumpToUserCenter() {
-        startActivity(new Intent(this, UserCenterActivity.class));
+        startActivity(new Intent(this, MainActivity.class));
     }
 }

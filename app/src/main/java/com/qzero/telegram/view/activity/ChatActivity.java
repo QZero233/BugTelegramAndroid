@@ -136,7 +136,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         RxView.clicks(btn_send)
                 .subscribe(o -> {
                     String message = et_content.getText().toString();
-                    presenter.sendMessage(message.getBytes());
+                    presenter.sendMessage(message.getBytes(),ChatMessage.TYPE_TEXT_MESSAGE);
                 });
 
         RxAdapterView.itemLongClicks(lv_messages)

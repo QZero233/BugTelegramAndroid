@@ -16,7 +16,7 @@ public class ChatContract {
 
         void loadMessageList();
 
-        void sendMessage(byte[] content);
+        void sendMessage(byte[] content,String messageType);
 
         void updateMessageStatus(String messageId,String newStatus);
         void deleteMessage(String messageId,boolean isPhysical);
