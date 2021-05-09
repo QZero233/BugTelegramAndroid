@@ -12,6 +12,7 @@ import com.qzero.telegram.dao.entity.ChatMember;
 import com.qzero.telegram.dao.entity.ChatMessage;
 import com.qzero.telegram.dao.entity.ChatSession;
 import com.qzero.telegram.dao.entity.ChatSessionParameter;
+import com.qzero.telegram.dao.entity.FileResource;
 import com.qzero.telegram.dao.entity.FileTransportTask;
 import com.qzero.telegram.dao.entity.UserInfo;
 
@@ -19,6 +20,7 @@ import com.qzero.telegram.dao.gen.ChatMemberDao;
 import com.qzero.telegram.dao.gen.ChatMessageDao;
 import com.qzero.telegram.dao.gen.ChatSessionDao;
 import com.qzero.telegram.dao.gen.ChatSessionParameterDao;
+import com.qzero.telegram.dao.gen.FileResourceDao;
 import com.qzero.telegram.dao.gen.FileTransportTaskDao;
 import com.qzero.telegram.dao.gen.UserInfoDao;
 
@@ -35,6 +37,7 @@ public class DaoSession extends AbstractDaoSession {
     private final DaoConfig chatMessageDaoConfig;
     private final DaoConfig chatSessionDaoConfig;
     private final DaoConfig chatSessionParameterDaoConfig;
+    private final DaoConfig fileResourceDaoConfig;
     private final DaoConfig fileTransportTaskDaoConfig;
     private final DaoConfig userInfoDaoConfig;
 
@@ -42,6 +45,7 @@ public class DaoSession extends AbstractDaoSession {
     private final ChatMessageDao chatMessageDao;
     private final ChatSessionDao chatSessionDao;
     private final ChatSessionParameterDao chatSessionParameterDao;
+    private final FileResourceDao fileResourceDao;
     private final FileTransportTaskDao fileTransportTaskDao;
     private final UserInfoDao userInfoDao;
 
@@ -61,6 +65,9 @@ public class DaoSession extends AbstractDaoSession {
         chatSessionParameterDaoConfig = daoConfigMap.get(ChatSessionParameterDao.class).clone();
         chatSessionParameterDaoConfig.initIdentityScope(type);
 
+        fileResourceDaoConfig = daoConfigMap.get(FileResourceDao.class).clone();
+        fileResourceDaoConfig.initIdentityScope(type);
+
         fileTransportTaskDaoConfig = daoConfigMap.get(FileTransportTaskDao.class).clone();
         fileTransportTaskDaoConfig.initIdentityScope(type);
 
@@ -71,6 +78,7 @@ public class DaoSession extends AbstractDaoSession {
         chatMessageDao = new ChatMessageDao(chatMessageDaoConfig, this);
         chatSessionDao = new ChatSessionDao(chatSessionDaoConfig, this);
         chatSessionParameterDao = new ChatSessionParameterDao(chatSessionParameterDaoConfig, this);
+        fileResourceDao = new FileResourceDao(fileResourceDaoConfig, this);
         fileTransportTaskDao = new FileTransportTaskDao(fileTransportTaskDaoConfig, this);
         userInfoDao = new UserInfoDao(userInfoDaoConfig, this);
 
@@ -78,6 +86,7 @@ public class DaoSession extends AbstractDaoSession {
         registerDao(ChatMessage.class, chatMessageDao);
         registerDao(ChatSession.class, chatSessionDao);
         registerDao(ChatSessionParameter.class, chatSessionParameterDao);
+        registerDao(FileResource.class, fileResourceDao);
         registerDao(FileTransportTask.class, fileTransportTaskDao);
         registerDao(UserInfo.class, userInfoDao);
     }
@@ -87,6 +96,7 @@ public class DaoSession extends AbstractDaoSession {
         chatMessageDaoConfig.clearIdentityScope();
         chatSessionDaoConfig.clearIdentityScope();
         chatSessionParameterDaoConfig.clearIdentityScope();
+        fileResourceDaoConfig.clearIdentityScope();
         fileTransportTaskDaoConfig.clearIdentityScope();
         userInfoDaoConfig.clearIdentityScope();
     }
@@ -105,6 +115,10 @@ public class DaoSession extends AbstractDaoSession {
 
     public ChatSessionParameterDao getChatSessionParameterDao() {
         return chatSessionParameterDao;
+    }
+
+    public FileResourceDao getFileResourceDao() {
+        return fileResourceDao;
     }
 
     public FileTransportTaskDao getFileTransportTaskDao() {

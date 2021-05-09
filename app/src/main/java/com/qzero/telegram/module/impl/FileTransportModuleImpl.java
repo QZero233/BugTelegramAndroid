@@ -37,12 +37,15 @@ public class FileTransportModuleImpl implements FileTransportModule {
         transportService= RetrofitHelper.getInstance(context).getService(FileTransportService.class);
     }
 
-
     @Override
     public Observable<ActionResult> uploadFileBlock(String resourceId, int blockIndex) throws IOException {
         FileTransportTask task=taskDao.load(resourceId);
         if(task==null)
             return Observable.error(new IllegalArgumentException("Transport task does not exist"));
+
+        if(task.getTransportType()!=FileTransportTask.TRANSPORT_TYPE_UPLOAD){
+            return Observable.error(new IllegalArgumentException("This is not a upload task"));
+        }
 
         File file=new File(task.getFullPath());
         RandomAccessFile randomAccessFile=new RandomAccessFile(file,"r");
@@ -71,7 +74,16 @@ public class FileTransportModuleImpl implements FileTransportModule {
         RequestBody responseBody=RequestBody.create(byteArrayOutputStream.toByteArray());
         return transportService.uploadFileBlock(responseBody,resourceId,blockIndex)
                 .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+                .flatMap(packedObject -> {
+                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
+
+                    if(actionResult.isSucceeded()){
+                        task.getTransportedBlockIndexes().add(blockIndex);
+                        taskDao.insertOrReplace(task);
+                    }
+
+                    return Observable.just(actionResult);
+                });
     }
 
     @Override
@@ -79,6 +91,10 @@ public class FileTransportModuleImpl implements FileTransportModule {
         FileTransportTask task=taskDao.load(resourceId);
         if(task==null)
             return Observable.error(new IllegalArgumentException("Transport task does not exist"));
+
+        if(task.getTransportType()!=FileTransportTask.TRANSPORT_TYPE_DOWNLOAD){
+            return Observable.error(new IllegalArgumentException("This is not a download task"));
+        }
 
         File file=new File(task.getFullPath());
         RandomAccessFile randomAccessFile=new RandomAccessFile(file,"rw");
@@ -106,7 +122,28 @@ public class FileTransportModuleImpl implements FileTransportModule {
                     }
                 })
                 .compose(DefaultTransformer.getInstance(context))
-                .flatMap(packedObject -> Observable.just(packedObject.parseObject(ActionResult.class)));
+                .flatMap(packedObject -> {
+                    ActionResult actionResult=packedObject.parseObject(ActionResult.class);
+
+                    if(actionResult.isSucceeded()){
+                        task.getTransportedBlockIndexes().add(blockIndex);
+                        taskDao.insertOrReplace(task);
+                    }
+
+                    return Observable.just(actionResult);
+                });
+    }
+
+    
+
+    @Override
+    public FileTransportTask getTransportTask(String resourceId) {
+        return null;
+    }
+
+    @Override
+    public void deleteTransportTask(String resourceId) {
+
     }
 
 
