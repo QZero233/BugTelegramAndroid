@@ -9,6 +9,7 @@ import okhttp3.ResponseBody;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -16,15 +17,17 @@ import retrofit2.http.Query;
 public interface FileTransportService {
 
     @Multipart
-    @POST("/{resource_id}/{block_index}")
-    Observable<PackedObject> uploadFileBlock(@Part RequestBody requestBody,
-                                             @Path("resource_id") String resourceId,
-                                             @Path("block_index") int blockIndex);
+    @POST("/storage/transport/{resource_id}/{block_index}")
+    Observable<PackedObject> uploadFile(@Part RequestBody requestBody,
+                                        @Query("offset") long offset,
+                                        @Query("length") int length);
 
 
-    @GET("/{resource_id}")
-    Observable<ResponseBody> downloadFileBlock(@Path("resource_id") String resourceId,
+    @GET("/storage/transport/{resource_id}")
+    Observable<ResponseBody> downloadFile(@Path("resource_id") String resourceId,
                                                @Query("offset") long offset,
-                                               @Query("length") long length);
+                                               @Query("length") int length);
 
+    @PUT("/storage/transport/{resource_id}/finished")
+    Observable<PackedObject> markTaskFinished(@Path("resource_id") String resourceId);
 }

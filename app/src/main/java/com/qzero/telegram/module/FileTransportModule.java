@@ -14,8 +14,6 @@ public interface FileTransportModule {
 
     Observable<ActionResult> downloadFileBlock(String resourceId,int blockIndex) throws IOException;
 
-    FileTransportTask getTransportTask(String resourceId);
-
-    void deleteTransportTask(String resourceId);
+    Observable<ActionResult> markTaskFinished(String resourceId);
 
 }

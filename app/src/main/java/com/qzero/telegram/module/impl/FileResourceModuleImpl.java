@@ -41,7 +41,7 @@ public class FileResourceModuleImpl implements FileResourceModule {
     }
 
     @Override
-    public Observable<ActionResult> newFileResource(File resource, long resourceLength, long transportBlockSize) {
+    public Observable<ActionResult> newFileResource(File resource, long resourceLength) {
         FileResource fileResource=new FileResource();
         fileResource.setResourceName(resource.getName());
         fileResource.setResourceLength(resourceLength);
@@ -49,7 +49,7 @@ public class FileResourceModuleImpl implements FileResourceModule {
         PackedObject packedObject=objectFactory.getPackedObject();
         packedObject.addObject(fileResource);
 
-        return resourceService.newFileResource(packedObject,transportBlockSize)
+        return resourceService.newFileResource(packedObject)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject1 -> {
                     ActionResult actionResult=packedObject1.parseObject(ActionResult.class);
@@ -62,7 +62,7 @@ public class FileResourceModuleImpl implements FileResourceModule {
                     FileTransportTask task=new FileTransportTask();
                     task.setResourceId(resourceId);
                     task.setFileLength(resourceLength);
-                    task.setBlockLength(transportBlockSize);
+                    task.setBlockLength(FileTransportTask.DEFAULT_BLOCK_LENGTH);//TODO let user specify block length
                     task.setFileName(resource.getName());
                     task.setFullPath(resource.getAbsolutePath());
                     taskDao.insertOrReplace(task);

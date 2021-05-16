@@ -16,6 +16,8 @@ public class FileTransportTask {
     public static final int TRANSPORT_TYPE_UPLOAD=1;
     public static final int TRANSPORT_TYPE_DOWNLOAD=2;
 
+    public static final int DEFAULT_BLOCK_LENGTH=5000000;//5MB
+
     @Id
     @Property(nameInDb = "resourceId")
     private String resourceId;
@@ -27,7 +29,7 @@ public class FileTransportTask {
     private long fileLength;
 
     @Property(nameInDb = "blockLength")
-    private long blockLength;
+    private int blockLength;
 
     @Property(nameInDb = "fullPath")
     private String fullPath;
@@ -43,9 +45,10 @@ public class FileTransportTask {
     public FileTransportTask() {
     }
 
-    @Generated(hash = 473991432)
+
+    @Generated(hash = 1370488288)
     public FileTransportTask(String resourceId, String fileName, long fileLength,
-            long blockLength, String fullPath, int transportType,
+            int blockLength, String fullPath, int transportType,
             List<Integer> transportedBlockIndexes) {
         this.resourceId = resourceId;
         this.fileName = fileName;
@@ -55,6 +58,7 @@ public class FileTransportTask {
         this.transportType = transportType;
         this.transportedBlockIndexes = transportedBlockIndexes;
     }
+    
 
     @Override
     public String toString() {
@@ -90,11 +94,11 @@ public class FileTransportTask {
         this.fileLength = fileLength;
     }
 
-    public long getBlockLength() {
+    public int getBlockLength() {
         return this.blockLength;
     }
 
-    public void setBlockLength(long blockLength) {
+    public void setBlockLength(int blockLength) {
         this.blockLength = blockLength;
     }
 

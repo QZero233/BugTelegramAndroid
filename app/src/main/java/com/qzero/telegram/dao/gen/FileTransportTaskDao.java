@@ -30,7 +30,7 @@ public class FileTransportTaskDao extends AbstractDao<FileTransportTask, String>
         public final static Property ResourceId = new Property(0, String.class, "resourceId", true, "resourceId");
         public final static Property FileName = new Property(1, String.class, "fileName", false, "fileName");
         public final static Property FileLength = new Property(2, long.class, "fileLength", false, "fileLength");
-        public final static Property BlockLength = new Property(3, long.class, "blockLength", false, "blockLength");
+        public final static Property BlockLength = new Property(3, int.class, "blockLength", false, "blockLength");
         public final static Property FullPath = new Property(4, String.class, "fullPath", false, "fullPath");
         public final static Property TransportType = new Property(5, int.class, "transportType", false, "transportType");
         public final static Property TransportedBlockIndexes = new Property(6, String.class, "transportedBlockIndexes", false, "transportedBlockIndexes");
@@ -132,7 +132,7 @@ public class FileTransportTaskDao extends AbstractDao<FileTransportTask, String>
             cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0), // resourceId
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // fileName
             cursor.getLong(offset + 2), // fileLength
-            cursor.getLong(offset + 3), // blockLength
+            cursor.getInt(offset + 3), // blockLength
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // fullPath
             cursor.getInt(offset + 5), // transportType
             cursor.isNull(offset + 6) ? null : transportedBlockIndexesConverter.convertToEntityProperty(cursor.getString(offset + 6)) // transportedBlockIndexes
@@ -145,7 +145,7 @@ public class FileTransportTaskDao extends AbstractDao<FileTransportTask, String>
         entity.setResourceId(cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0));
         entity.setFileName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setFileLength(cursor.getLong(offset + 2));
-        entity.setBlockLength(cursor.getLong(offset + 3));
+        entity.setBlockLength(cursor.getInt(offset + 3));
         entity.setFullPath(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setTransportType(cursor.getInt(offset + 5));
         entity.setTransportedBlockIndexes(cursor.isNull(offset + 6) ? null : transportedBlockIndexesConverter.convertToEntityProperty(cursor.getString(offset + 6)));

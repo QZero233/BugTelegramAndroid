@@ -4,7 +4,9 @@ import android.content.Context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qzero.telegram.dao.SessionManager;
+import com.qzero.telegram.dao.entity.FileResource;
 import com.qzero.telegram.dao.entity.FileTransportTask;
+import com.qzero.telegram.dao.gen.FileResourceDao;
 import com.qzero.telegram.dao.gen.FileTransportTaskDao;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
@@ -15,7 +17,6 @@ import com.qzero.telegram.http.service.DefaultTransformer;
 import com.qzero.telegram.http.service.FileTransportService;
 import com.qzero.telegram.module.FileTransportModule;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -26,14 +27,20 @@ import okhttp3.RequestBody;
 public class FileTransportModuleImpl implements FileTransportModule {
 
     private Context context;
+
     private FileTransportTaskDao taskDao;
+    private FileResourceDao resourceDao;
+
     private FileTransportService transportService;
 
     private CommonPackedObjectFactory packedObjectFactory=new CommonPackedObjectFactory();
 
     public FileTransportModuleImpl(Context context) {
         this.context = context;
+
         taskDao= SessionManager.getInstance(context).getSession().getFileTransportTaskDao();
+        resourceDao=SessionManager.getInstance(context).getSession().getFileResourceDao();
+
         transportService= RetrofitHelper.getInstance(context).getService(FileTransportService.class);
     }
 
@@ -51,28 +58,17 @@ public class FileTransportModuleImpl implements FileTransportModule {
         RandomAccessFile randomAccessFile=new RandomAccessFile(file,"r");
 
         long offset=blockIndex*task.getBlockLength();
-        long length=task.getBlockLength();
+        int length=task.getBlockLength();
         if(offset+task.getBlockLength()>task.getFileLength()){
-            length=task.getFileLength()-offset;
+            length= (int) (task.getFileLength()-offset);
         }
         randomAccessFile.seek(offset);
 
-        ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream((int) length);
+        byte[] buf=new byte[length];
+        randomAccessFile.readFully(buf);
 
-        byte[] buf=new byte[2048];
-        int len;
-        int totalLen=0;
-        while((len=randomAccessFile.read(buf))!=-1){
-            totalLen+=len;
-            if(totalLen>length){
-                len= (int) (length-(totalLen-len));
-            }
-
-            byteArrayOutputStream.write(buf,0,len);
-        }
-
-        RequestBody responseBody=RequestBody.create(byteArrayOutputStream.toByteArray());
-        return transportService.uploadFileBlock(responseBody,resourceId,blockIndex)
+        RequestBody responseBody=RequestBody.create(buf);
+        return transportService.uploadFile(responseBody,offset,length)
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> {
                     ActionResult actionResult=packedObject.parseObject(ActionResult.class);
@@ -80,6 +76,7 @@ public class FileTransportModuleImpl implements FileTransportModule {
                     if(actionResult.isSucceeded()){
                         task.getTransportedBlockIndexes().add(blockIndex);
                         taskDao.insertOrReplace(task);
+                        //TODO check if task is finished
                     }
 
                     return Observable.just(actionResult);
@@ -100,13 +97,13 @@ public class FileTransportModuleImpl implements FileTransportModule {
         RandomAccessFile randomAccessFile=new RandomAccessFile(file,"rw");
 
         long offset=blockIndex*task.getBlockLength();
-        long length=task.getBlockLength();
+        int length=task.getBlockLength();
         if(offset+task.getBlockLength()>task.getFileLength()){
-            length=task.getFileLength()-offset;
+            length= (int) (task.getFileLength()-offset);
         }
         randomAccessFile.seek(offset);
 
-        return transportService.downloadFileBlock(resourceId,offset,length)
+        return transportService.downloadFile(resourceId,offset,length)
                 .flatMap(responseBody -> {
                     byte[] buf=responseBody.bytes();
 
@@ -134,17 +131,23 @@ public class FileTransportModuleImpl implements FileTransportModule {
                 });
     }
 
-    
-
     @Override
-    public FileTransportTask getTransportTask(String resourceId) {
-        return null;
+    public Observable<ActionResult> markTaskFinished(String resourceId) {
+        return transportService.markTaskFinished(resourceId)
+                .compose(DefaultTransformer.getInstance(context))
+                .flatMap(packedObject -> {
+                    FileTransportTask task=taskDao.load(resourceId);
+                    if(task!=null)
+                        taskDao.delete(task);
+
+                    FileResource resource=resourceDao.load(resourceId);
+                    if(resource!=null){
+                        resource.setResourceStatus(FileResource.STATUS_READY);
+                        resourceDao.insertOrReplace(resource);
+                    }
+
+                   return Observable.just(packedObject.parseObject(ActionResult.class));
+                });
     }
-
-    @Override
-    public void deleteTransportTask(String resourceId) {
-
-    }
-
 
 }

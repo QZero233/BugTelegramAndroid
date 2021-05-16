@@ -11,7 +11,7 @@ import io.reactivex.rxjava3.core.Observable;
 
 public interface FileResourceModule {
 
-    Observable<ActionResult> newFileResource(File resource, long resourceLength, long transportBlockSize);
+    Observable<ActionResult> newFileResource(File resource, long resourceLength);
 
     Observable<ActionResult> deleteFileResource(String resourceId);
 

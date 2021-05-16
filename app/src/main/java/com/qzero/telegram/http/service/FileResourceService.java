@@ -13,8 +13,7 @@ import retrofit2.http.Query;
 public interface FileResourceService {
 
     @POST("/storage/resource/")
-    Observable<PackedObject> newFileResource(@Body PackedObject parameter,
-                                             @Query("transport_block_size") long transportBlockSize);
+    Observable<PackedObject> newFileResource(@Body PackedObject parameter);
 
     @DELETE("/storage/resource/{resource_id}")
     Observable<PackedObject> deleteFileResource(@Path("resource_id") String resourceId);
