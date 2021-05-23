@@ -8,9 +8,13 @@ import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Property;
 import org.greenrobot.greendao.annotation.Generated;
 
+import java.io.Serializable;
+
 @Entity(nameInDb = "file_resource")
 @ParameterObject(name = "FileResource")
-public class FileResource {
+public class FileResource implements Serializable {
+
+    public static final long serialVersionUID=1L;
 
     public static final int STATUS_ERROR=-1;
     public static final int STATUS_TRANSPORTING=0;

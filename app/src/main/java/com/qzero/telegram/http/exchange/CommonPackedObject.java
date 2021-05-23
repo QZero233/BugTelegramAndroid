@@ -81,6 +81,7 @@ public class CommonPackedObject implements PackedObject {
     public Collection parseCollectionObject(String specialName, Class collectionClass, Class... elementClasses) {
         try {
             ObjectMapper mapper=new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             JavaType type=mapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
             return mapper.readValue(object.get(specialName), type);
         }catch (Exception e){

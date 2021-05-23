@@ -41,7 +41,9 @@ public class FileResourceModuleImpl implements FileResourceModule {
     }
 
     @Override
-    public Observable<ActionResult> newFileResource(File resource, long resourceLength) {
+    public Observable<ActionResult> newFileResource(File resource) {
+        long resourceLength=resource.length();
+
         FileResource fileResource=new FileResource();
         fileResource.setResourceName(resource.getName());
         fileResource.setResourceLength(resourceLength);
@@ -111,7 +113,7 @@ public class FileResourceModuleImpl implements FileResourceModule {
                 .compose(DefaultTransformer.getInstance(context))
                 .flatMap(packedObject -> {
                    List<FileResource> fileResources= (List<FileResource>) packedObject.parseCollectionObject("FileResourceList",
-                           FileResource.class, List.class);
+                           List.class, FileResource.class);
 
                    if(fileResources!=null){
                        for(FileResource fileResource:fileResources){
