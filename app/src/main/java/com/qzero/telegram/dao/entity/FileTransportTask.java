@@ -5,6 +5,7 @@ import com.qzero.telegram.dao.converter.TransportedIndexConverter;
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.Keep;
 import org.greenrobot.greendao.annotation.Property;
 import org.greenrobot.greendao.annotation.Generated;
 
@@ -16,7 +17,7 @@ public class FileTransportTask {
     public static final int TRANSPORT_TYPE_UPLOAD=1;
     public static final int TRANSPORT_TYPE_DOWNLOAD=2;
 
-    public static final int DEFAULT_BLOCK_LENGTH=5000000;//5MB
+    public static final int DEFAULT_BLOCK_LENGTH=500000;//0.5MB
 
     @Id
     @Property(nameInDb = "resourceId")
@@ -68,6 +69,14 @@ public class FileTransportTask {
                 ", fileLength=" + fileLength +
                 ", blockLength=" + blockLength +
                 '}';
+    }
+
+    @Keep
+    public int calculateBlockCount(){
+        if(fileLength%blockLength==0)
+            return (int) (fileLength/blockLength);
+
+        return (int) (fileLength/blockLength)+1;
     }
 
     public String getResourceId() {

@@ -43,6 +43,7 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull List<FileResource> fileResourceList) {
                         if(isViewAttached()){
+                            getView().hideProgress();
                             getView().loadAllFileResource(fileResourceList);
                         }
                     }
@@ -59,9 +60,7 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
 
                     @Override
                     public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
+
                     }
                 });
     }
@@ -79,6 +78,7 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
                         if(isViewAttached()){
+                            getView().hideProgress();
                             getView().showToast("Create file resource successfully");
                             loadAllFileResource();
                         }
@@ -95,9 +95,6 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
 
                     @Override
                     public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
                     }
                 });
     }
@@ -116,6 +113,7 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
                     @Override
                     public void onNext(@io.reactivex.rxjava3.annotations.NonNull ActionResult actionResult) {
                         if(isViewAttached()){
+                            getView().hideProgress();
                             getView().showToast("Resource was deleted successfully");
                             loadAllFileResource();
                         }
@@ -132,9 +130,6 @@ public class FileResourceListPresenter extends BasePresenter<FileResourceListCon
 
                     @Override
                     public void onComplete() {
-                        if(isViewAttached()){
-                            getView().hideProgress();
-                        }
                     }
                 });
     }

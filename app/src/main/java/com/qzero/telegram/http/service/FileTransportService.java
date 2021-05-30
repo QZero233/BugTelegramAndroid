@@ -4,6 +4,7 @@ package com.qzero.telegram.http.service;
 import com.qzero.telegram.http.exchange.PackedObject;
 
 import io.reactivex.rxjava3.core.Observable;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.GET;
@@ -17,8 +18,9 @@ import retrofit2.http.Query;
 public interface FileTransportService {
 
     @Multipart
-    @POST("/storage/transport/{resource_id}/{block_index}")
-    Observable<PackedObject> uploadFile(@Part RequestBody requestBody,
+    @POST("/storage/transport/{resource_id}")
+    Observable<PackedObject> uploadFile(@Part MultipartBody.Part part,
+                                        @Path("resource_id") String resourceId,
                                         @Query("offset") long offset,
                                         @Query("length") int length);
 

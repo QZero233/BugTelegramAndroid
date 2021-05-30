@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,6 +31,7 @@ import com.qzero.telegram.dao.entity.FileResource;
 import com.qzero.telegram.presenter.FileResourceListPresenter;
 import com.qzero.telegram.view.BaseFragment;
 import com.qzero.telegram.view.activity.FileResourceDetailActivity;
+import com.qzero.telegram.view.activity.TransportTaskActivity;
 
 import java.io.File;
 import java.util.List;
@@ -51,6 +55,8 @@ public class FileResourceListFragment extends BaseFragment implements FileResour
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view=View.inflate(getContext(), R.layout.fragment_file_resource_list,null);
+
+        setHasOptionsMenu(true);
 
         checkPermission();
 
@@ -95,6 +101,22 @@ public class FileResourceListFragment extends BaseFragment implements FileResour
         });
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_file_resource_list,menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if(item.getItemId()==R.id.m_task){
+            startActivity(new Intent(getContext(), TransportTaskActivity.class));
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void checkPermission(){

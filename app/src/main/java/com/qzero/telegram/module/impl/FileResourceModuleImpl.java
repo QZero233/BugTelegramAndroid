@@ -67,6 +67,7 @@ public class FileResourceModuleImpl implements FileResourceModule {
                     task.setBlockLength(FileTransportTask.DEFAULT_BLOCK_LENGTH);//TODO let user specify block length
                     task.setFileName(resource.getName());
                     task.setFullPath(resource.getAbsolutePath());
+                    task.setTransportType(FileTransportTask.TRANSPORT_TYPE_UPLOAD);
                     taskDao.insertOrReplace(task);
 
                     return Observable.just(actionResult);

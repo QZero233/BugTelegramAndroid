@@ -16,4 +16,8 @@ public interface FileTransportModule {
 
     Observable<ActionResult> markTaskFinished(String resourceId);
 
+    void deleteDownloadTask(String resourceId);
+
+    Observable<ActionResult> deleteUploadTask(String resourceId);
+
 }

@@ -3,6 +3,8 @@ package com.qzero.telegram;
 import android.app.Application;
 
 
+import com.qzero.telegram.file.FileTransportTaskManager;
+
 import org.apache.log4j.Level;
 
 import de.mindpipe.android.logging.log4j.LogConfigurator;
@@ -15,6 +17,8 @@ public class TelegramApplication extends Application {
         super.onCreate();
 
         configureLog();
+
+        FileTransportTaskManager.getInstance().loadContext(this);
     }
 
     private void configureLog(){
