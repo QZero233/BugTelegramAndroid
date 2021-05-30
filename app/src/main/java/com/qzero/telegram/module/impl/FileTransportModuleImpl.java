@@ -85,7 +85,14 @@ public class FileTransportModuleImpl implements FileTransportModule {
                             task.setTransportedBlockIndexes(new ArrayList<>());
                         task.getTransportedBlockIndexes().add(blockIndex);
                         taskDao.insertOrReplace(task);
-                        //TODO check if task is finished
+
+                        if(task.getTransportedBlockIndexes().size()==task.calculateBlockCount()){
+                            return markTaskFinished(resourceId)
+                                    .flatMap(actionResult1 -> {
+                                        taskDao.delete(task);
+                                       return Observable.just(actionResult1);
+                                    });
+                        }
                     }
 
                     return Observable.just(actionResult);

@@ -116,6 +116,9 @@ public class TransportTaskActivity extends AppCompatActivity implements AdapterV
 
                 tv_progress.setText((isRunning?"(Running)":"(Paused)")+String.format("%.2f(%d/%d)", progress.getPercentage()*100,progress.getFinished(),progress.getTotal()));
 
+                if(progress.getTotal()==progress.getFinished())
+                    tv_progress.setText(String.format("(Finished)100(%d,%d)", progress.getFinished(),progress.getTotal()));
+
                 return v;
             }
         });

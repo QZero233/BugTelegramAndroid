@@ -6,6 +6,7 @@ import com.qzero.telegram.dao.SessionManager;
 import com.qzero.telegram.dao.entity.FileTransportTask;
 import com.qzero.telegram.dao.gen.FileResourceDao;
 import com.qzero.telegram.dao.gen.FileTransportTaskDao;
+import com.qzero.telegram.file.FileTransportTaskManager;
 import com.qzero.telegram.http.RetrofitHelper;
 import com.qzero.telegram.http.bean.ActionResult;
 import com.qzero.telegram.dao.entity.FileResource;
@@ -69,6 +70,8 @@ public class FileResourceModuleImpl implements FileResourceModule {
                     task.setFullPath(resource.getAbsolutePath());
                     task.setTransportType(FileTransportTask.TRANSPORT_TYPE_UPLOAD);
                     taskDao.insertOrReplace(task);
+
+                    FileTransportTaskManager.getInstance().startTask(resourceId);
 
                     return Observable.just(actionResult);
                 });

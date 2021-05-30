@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +23,12 @@ public class JSONUtils {
     }
 
     public static<T> List<T> jsonToList(String json,Class<T> cls) throws JsonProcessingException {
-        JavaType type=mapper.getTypeFactory().constructParametricType(cls, List.class);
-        return mapper.readValue(json, type);
+        JavaType type=mapper.getTypeFactory().constructParametricType(List.class,cls);
+        List<T> result= mapper.readValue(json, type);
+        if(result==null)
+            return new ArrayList<>();
+
+        return result;
     }
 
 }
